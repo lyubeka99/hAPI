@@ -10,3 +10,4 @@ __pycache__/
 # Ignore test test files
 /tests
 /full-stack-fastapi-template
+/test_report.html

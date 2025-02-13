@@ -12,8 +12,30 @@
         <h1> Security Audit Report</h1>
     </header>
     <main>
-        {% for item in collection %}
-            
+        {% for module in modules %}
+            <h2>{{ module.module }}</h2>
+            <p>{{ module.description }}</p>
+            {% if module.table %}
+            <table>
+                <tr>
+                    {% for header in module.table.headers %}
+                        <th> {{ header }} </th>
+                    {% endfor %}
+                </tr>
+                    {% for row in module.table.rows %}
+                        <tr>
+                            {% for entry in row %}
+                            <td>{{ entry }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+            </table>
+
+            {% elif module.key-value-pairs %}
+                <p>KEY VALUE PAIRS</p>
+            {% elif module.free-text %}
+                <p>FREE TEXT</p>
+            {% endif %}
         {% endfor %}
     </main>
 </body>

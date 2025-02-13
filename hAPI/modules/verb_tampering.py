@@ -28,12 +28,19 @@ class VerbTamperingCheck:
                 # The first entry is the path, the second is the verb
                 result_row = [path, verb] 
 
+                ### DEBUG
+                # print(f"THE VERBS DEFINED IN THE OPENAPI SPEC: {verbs_defined_in_openapi}")
+                # print(f"Current verb: {verb}")
+                ### DEBUG
                 # The third entry is either the expected response codes or 405
-                if verb in verbs_defined_in_openapi:
+                if verb.lower() in verbs_defined_in_openapi:
                     expected_response_status_codes = self.openapi_parser.get_expected_response_status_codes_for_path_and_verb(
-                        self.openapi_paths, path, verb
+                        self.openapi_paths, path, verb.lower()
                     )
                     result_row.append(", ".join(expected_response_status_codes))
+                    ### DEBUG
+                    # print(f"EXPECTED RESPONSE STATUS CODES FOR {verb.upper()} ARE: {expected_response_status_codes}")
+                    ### DEBUG
                 else:
                     expected_response_status_codes = self.UNSUPPORTED_VERB_STATUS_CODE
                     result_row.append(expected_response_status_codes)
@@ -64,12 +71,7 @@ class VerbTamperingCheck:
         
     def _compare_results(self, actual_status_code, expected_status_codes):
         """Compares the actual response code against expected codes."""
-
-        if isinstance(expected_status_codes, str):
-            expected_list = [expected_status_codes]
-        else:
-            expected_list = expected_status_codes
-        
+        expected_list = expected_status_codes if isinstance(expected_status_codes, list) else [expected_status_codes]
         return "PASS" if str(actual_status_code) in expected_list else "FAIL"
 
     def format_results(self, unformatted_results):
@@ -77,11 +79,11 @@ class VerbTamperingCheck:
         module_name = "HTTP Verb Tampering"
         module_description = "Checks how the API responds to different HTTP verbs/methods."
         module_table_headers = [ "Path", "Verb", "Expected Response Code" , "Actual Response Code", "Test Result" ]
-
         module_table = {
             "headers": module_table_headers,
             "rows": unformatted_results
         }
+        
         formatted_results = {
             "module": module_name,
             "description": module_description,
