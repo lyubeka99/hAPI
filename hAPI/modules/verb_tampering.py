@@ -38,48 +38,23 @@ class VerbTamperingCheck:
                     expected_response_status_codes = self.UNSUPPORTED_VERB_STATUS_CODE
                     result_row.append(expected_response_status_codes)
 
-                ### DEBUG
-                # print(f"The object returned is: {self.send_request(path, verb)}")
-                ### DEBUG
-
                 # Send request
-                response_status_code = self.send_request(path, verb)
+                response_status_code = self._send_request(path, verb)
                 # Store actual response
                 result_row.append(response_status_code)
 
                 # Compare expected vs actual response
-                result_row.append(self.compare_results(response_status_code,expected_response_status_codes))
+                result_row.append(self._compare_results(response_status_code,expected_response_status_codes))
 
                 # Append to final result array
                 self.results.append(result_row)
         return self.results
-    
 
-    def send_request(self, path, verb):
+    def _send_request(self, path, verb):
         """Sends an HTTP request with the specified verb and returns a dictionary object with the response information."""
         try:
             final_url = f"{self.url}{path}"
             response = requests.request(verb.upper(), final_url)
-
-            ### DEBUG
-            # print(f"final url is {final_url}")
-            # print(f"response object is {response.json()}")
-            # print(f"response object is {response.status_code}")
-            ### DEBUG
-
-            # try:
-            #     response_data = response.json()
-            # except requests.JSONDecodeError:
-            #     response_data = {"body": response.text}
-            
-            ### DEBUG
-            # print(f"Verb is {verb.upper()}")
-            # print(f"Path is {path}")
-            # print(f"Response data is: {response_data} of type {type(response_data)}")
-            # print()
-            # print(f"response object is {response.status_code}")
-            ### DEBUG
-
             response_code = response.status_code
 
             return response_code
@@ -87,7 +62,7 @@ class VerbTamperingCheck:
             print(f"Error sending request: {e}")
             return "ERROR"
         
-    def compare_results(self, actual_status_code, expected_status_codes):
+    def _compare_results(self, actual_status_code, expected_status_codes):
         """Compares the actual response code against expected codes."""
 
         if isinstance(expected_status_codes, str):
@@ -96,3 +71,20 @@ class VerbTamperingCheck:
             expected_list = expected_status_codes
         
         return "PASS" if str(actual_status_code) in expected_list else "FAIL"
+
+    def format_results(self, unformatted_results):
+        """Formats the results of the verb tampering check in a way to be fed into the report."""
+        module_name = "HTTP Verb Tampering"
+        module_description = "Checks how the API responds to different HTTP verbs/methods."
+        module_table_headers = [ "Path", "Verb", "Expected Response Code" , "Actual Response Code", "Test Result" ]
+
+        module_table = {
+            "headers": module_table_headers,
+            "rows": unformatted_results
+        }
+        formatted_results = {
+            "module": module_name,
+            "description": module_description,
+            "table": module_table
+        }
+        return formatted_results

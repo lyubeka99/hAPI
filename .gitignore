@@ -1,10 +1,12 @@
-# Ignore To-Do list.
+# Ignore To-Do list and miscellaneous files.
 /TODO.txt
+/hapi.txt
 
 # Ignore compiled Python files
 __pycache__/
 *.pyc
 *.pyo
 
-# Ignore test api
+# Ignore test test files
+/tests
 /full-stack-fastapi-template
