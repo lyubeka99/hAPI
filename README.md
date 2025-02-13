@@ -1,4 +1,5 @@
-# hAPI (hackAPI)
+### hAPI is not yet ready. I accidentally made the repo public and I do not want to make it private again. First beta version to be released by the end of the week!
+# hAPI (hackAPI) - BETA
 hAPI (hackAPI) is a tool that automates testing for common security misconfigurations in REST APIs. The plan is to expand the tool to cover other API paradigms like SOAP, GraphQL, JSON-RPC, etc., and expand on the number of misconfigurations it can look for. Stay tuned.
 
 ## Limitations
