@@ -5,7 +5,54 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>hAPI Security Audit Report</title>
-    <link rel="stylesheet" href="../static/style.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        header {
+            background-color: #0073e6;
+            color: white;
+            text-align: center;
+            padding: 15px;
+        }
+
+        main {
+            padding: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        table, th, td {
+            border: 1px solid black;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+
+        .pass {
+            background-color: #c8e6c9;  /* Green */
+        }
+
+        .fail {
+            background-color: #ffcccb;  /* Red */
+        }
+
+        footer {
+            text-align: center;
+            padding: 10px;
+            background-color: #ddd;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -25,7 +72,13 @@
                     {% for row in module.table.rows %}
                         <tr>
                             {% for entry in row %}
-                            <td>{{ entry }}</td>
+                                {% if entry == 'PASS' %}
+                                    <td class="pass">{{ entry }}</td>
+                                {% elif entry == 'FAIL' %}
+                                    <td class="fail">{{ entry }}</td>
+                                {% else %}
+                                    <td>{{ entry }}</td>
+                                {% endif %}
                             {% endfor %}
                         </tr>
                     {% endfor %}
