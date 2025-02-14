@@ -1,5 +1,6 @@
 import requests
 from hAPI.parsers.openapi_parser import OpenAPIParser
+from hAPI.core.http_client import HTTPClient
 
 class VerbTamperingCheck:
     """Performs HTTP verb tampering checks against an OpenAPI-defined API."""
@@ -8,13 +9,13 @@ class VerbTamperingCheck:
 
     DEFAULT_VERB_WORDLIST = [ "OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE", "TRACE", "TRACK", "DEBUG", "PURGE", "CONNECT", "PROPFIND", "PROPPATC", "MKCOL", "COPY", "MOVE", "LOCK", "UNLOCK", "VERSION-CONTROL", "REPORT", "CHECKOUT", "CHECKIN", "UNCHECKOUT", "MKWORKSPACE", "UPDATE", "LABEL", "MERGE", "BASELINE-CONTROL", "MKACTIVITY", "ORDERPATCH", "ACL", "PATCH", "SEARCH", "ARBITRARY", "BIND", "LINK", "MKCALENDAR", "MKREDIRECTREF", "PRI", "QUERY", "REBIND", "UNBIND", "UNLINK", "UPDATEREDIRECTREF" ]
 
-    def __init__(self, url, openapi_file, http_verb_wordlist=DEFAULT_VERB_WORDLIST):
+    def __init__(self, http_client, openapi_file, http_verb_wordlist=None):
         """Initialize with OpenAPI schema and list of HTTP verbs to test."""
-        self.url = url
+        self.http_client = http_client
         self.openapi_parser = OpenAPIParser(openapi_file)
         self.openapi_schema = self.openapi_parser.parse_openapi_schema()
         self.openapi_paths = self.openapi_parser.create_paths_dict(self.openapi_schema)
-        self.http_verb_wordlist = http_verb_wordlist
+        self.http_verb_wordlist = http_verb_wordlist or self.DEFAULT_VERB_WORDLIST
         self.results = []
     
     def run_check(self):
@@ -28,19 +29,12 @@ class VerbTamperingCheck:
                 # The first entry is the path, the second is the verb
                 result_row = [path, verb] 
 
-                ### DEBUG
-                # print(f"THE VERBS DEFINED IN THE OPENAPI SPEC: {verbs_defined_in_openapi}")
-                # print(f"Current verb: {verb}")
-                ### DEBUG
                 # The third entry is either the expected response codes or 405
                 if verb.lower() in verbs_defined_in_openapi:
                     expected_response_status_codes = self.openapi_parser.get_expected_response_status_codes_for_path_and_verb(
                         self.openapi_paths, path, verb.lower()
                     )
                     result_row.append(", ".join(expected_response_status_codes))
-                    ### DEBUG
-                    # print(f"EXPECTED RESPONSE STATUS CODES FOR {verb.upper()} ARE: {expected_response_status_codes}")
-                    ### DEBUG
                 else:
                     expected_response_status_codes = self.UNSUPPORTED_VERB_STATUS_CODE
                     result_row.append(expected_response_status_codes)
@@ -59,15 +53,9 @@ class VerbTamperingCheck:
 
     def _send_request(self, path, verb):
         """Sends an HTTP request with the specified verb and returns a dictionary object with the response information."""
-        try:
-            final_url = f"{self.url}{path}"
-            response = requests.request(verb.upper(), final_url)
-            response_code = response.status_code
-
-            return response_code
-        except requests.RequestException as e:
-            print(f"Error sending request: {e}")
-            return "ERROR"
+        response = self.http_client.send_request(path, verb)
+        return response.status_code
+        
         
     def _compare_results(self, actual_status_code, expected_status_codes):
         """Compares the actual response code against expected codes."""

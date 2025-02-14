@@ -1,13 +1,24 @@
 import json
 from hAPI.modules.verb_tampering import VerbTamperingCheck
+from hAPI.reports.html_report import HTMLReport
+from hAPI.core.http_client import HTTPClient
 
 TEST_JSON_FILE = "tests/localtest.json"
 
 ### TEST THE run_check() METHOD
-verbTamperingCheck = VerbTamperingCheck("http://127.0.0.1:8000", TEST_JSON_FILE)
+headers={"Authorization": "Basic mytoken"}
+http_client = HTTPClient("http://127.0.0.1:8000", headers=headers)
+verbTamperingCheck = VerbTamperingCheck(http_client, TEST_JSON_FILE)
 results_test = verbTamperingCheck.run_check()
-print(results_test)
-
+formatted_results = verbTamperingCheck.format_results(results_test)
+final_results = []
+final_results.append(formatted_results)
+html_report = HTMLReport(final_results)
+html_page = html_report.generate()
+f = open("test_report.html", "w")
+f.write(html_page)
+f.close()
+# print(results_test)
 
 
 ### TEST EXAMPLE OUTPUT OF run_check()
