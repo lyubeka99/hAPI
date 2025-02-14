@@ -1,5 +1,6 @@
 # Ignore To-Do list and miscellaneous files.
 /TODO.txt
+/APACHE_LICENSE
 /hapi.txt
 
 # Ignore compiled Python files
