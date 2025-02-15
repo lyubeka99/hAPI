@@ -1,6 +1,6 @@
 import os
 from jinja2 import Environment, FileSystemLoader
-from hAPI.reports.base_report import BaseReport
+from reports.base_report import BaseReport
 
 class HTMLReport(BaseReport):
     """Generates an HTML report containing the results from all modules chosen by the user."""
