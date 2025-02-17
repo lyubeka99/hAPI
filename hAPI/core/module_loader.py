@@ -1,17 +1,17 @@
 import importlib
 import pkgutil
-import modules  # This assumes your modules are inside a `modules/` package
+import modules
 
 def load_modules():
     """
-    Dynamically loads all security modules from the `modules` package.
+    Dynamically loads all security modules from the 'modules' package.
 
     :return: Dictionary {module_name: module_class}
     """
     loaded_modules = {}
 
-    package_path = modules.__path__  # Path to the `modules` package
-    package_name = modules.__name__  # 'modules'
+    package_path = modules.__path__
+    package_name = modules.__name__
 
     for _, module_name, _ in pkgutil.iter_modules(package_path):
         full_module_name = f"{package_name}.{module_name}"

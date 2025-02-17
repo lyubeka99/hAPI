@@ -1,7 +1,7 @@
 import json
 import os
 import yaml
-from hAPI.exceptions import OpenAPISchemaError
+from exceptions import OpenAPISchemaError
 
 class OpenAPIParser:
     """Parses OpenAPI schemas in JSON or YAML format"""

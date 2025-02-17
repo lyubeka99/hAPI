@@ -1,80 +1,73 @@
 import requests
-from hAPI.parsers.openapi_parser import OpenAPIParser
-from hAPI.core.http_client import HTTPClient
 
-class VerbTamperingCheck:
+class VerbTampering:
     """Performs HTTP verb tampering checks against an OpenAPI-defined API."""
 
     UNSUPPORTED_VERB_STATUS_CODE = "405"
 
-    DEFAULT_VERB_WORDLIST = [ "OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE", "TRACE", "TRACK", "DEBUG", "PURGE", "CONNECT", "PROPFIND", "PROPPATC", "MKCOL", "COPY", "MOVE", "LOCK", "UNLOCK", "VERSION-CONTROL", "REPORT", "CHECKOUT", "CHECKIN", "UNCHECKOUT", "MKWORKSPACE", "UPDATE", "LABEL", "MERGE", "BASELINE-CONTROL", "MKACTIVITY", "ORDERPATCH", "ACL", "PATCH", "SEARCH", "ARBITRARY", "BIND", "LINK", "MKCALENDAR", "MKREDIRECTREF", "PRI", "QUERY", "REBIND", "UNBIND", "UNLINK", "UPDATEREDIRECTREF" ]
+    DEFAULT_VERB_WORDLIST = [
+        "OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE", "TRACE", "TRACK", "DEBUG", "PURGE",
+        "CONNECT", "PROPFIND", "PROPPATCH", "MKCOL", "COPY", "MOVE", "LOCK", "UNLOCK", "PATCH",
+        "SEARCH", "BIND", "LINK", "MKCALENDAR", "REBIND", "UNBIND", "UNLINK", "QUERY"
+    ]
 
-    def __init__(self, http_client, openapi_file, http_verb_wordlist=None):
-        """Initialize with OpenAPI schema and list of HTTP verbs to test."""
+    def __init__(self, http_client, parsed_schema, args):
+        """Initialize with HTTP client and pre-parsed OpenAPI schema."""
         self.http_client = http_client
-        self.openapi_parser = OpenAPIParser(openapi_file)
-        self.openapi_schema = self.openapi_parser.parse_openapi_schema()
-        self.openapi_paths = self.openapi_parser.create_paths_dict(self.openapi_schema)
-        self.http_verb_wordlist = http_verb_wordlist or self.DEFAULT_VERB_WORDLIST
+        self.openapi_schema = parsed_schema["full_schema"]
+        self.openapi_paths = parsed_schema["paths"]
+        self.http_verb_wordlist = args.wordlist if args.wordlist else self.DEFAULT_VERB_WORDLIST
         self.results = []
-    
+
+    @classmethod
+    def add_arguments(cls, parser):
+        """Defines CLI arguments specific to this module."""
+        parser.add_argument("--wordlist", help="Path to custom wordlist for HTTP verbs")
+
     def run_check(self):
-        for path in self.openapi_paths:
-            verbs_defined_in_openapi = self.openapi_parser.get_expected_http_verbs_for_path(
-                self.openapi_paths, path
-            )
+        for path, details in self.openapi_paths.items():
+            verbs_defined_in_openapi = list(details.keys())  # Extract available verbs
 
-            wordlist = self.http_verb_wordlist
-            for verb in wordlist:
-                # The first entry is the path, the second is the verb
-                result_row = [path, verb] 
+            for verb in self.http_verb_wordlist:
+                result_row = [path, verb]
 
-                # The third entry is either the expected response codes or 405
+                # Determine expected response codes
                 if verb.lower() in verbs_defined_in_openapi:
-                    expected_response_status_codes = self.openapi_parser.get_expected_response_status_codes_for_path_and_verb(
-                        self.openapi_paths, path, verb.lower()
-                    )
-                    result_row.append(", ".join(expected_response_status_codes))
+                    expected_response_status_codes = [
+                        str(code) for code in details[verb.lower()]["responses"].keys()
+                    ]
                 else:
-                    expected_response_status_codes = self.UNSUPPORTED_VERB_STATUS_CODE
-                    result_row.append(expected_response_status_codes)
+                    expected_response_status_codes = [self.UNSUPPORTED_VERB_STATUS_CODE]
 
-                # Send request
+                result_row.append(", ".join(expected_response_status_codes))
+
+                # Send request and store response
                 response_status_code = self._send_request(path, verb)
-                # Store actual response
-                result_row.append(response_status_code)
+                result_row.append(str(response_status_code))
 
-                # Compare expected vs actual response
-                result_row.append(self._compare_results(response_status_code,expected_response_status_codes))
+                # Compare expected vs actual
+                result_row.append(self._compare_results(response_status_code, expected_response_status_codes))
 
-                # Append to final result array
                 self.results.append(result_row)
+
         return self.results
 
     def _send_request(self, path, verb):
-        """Sends an HTTP request with the specified verb and returns a dictionary object with the response information."""
+        """Sends an HTTP request with the specified verb and returns the response status code."""
         response = self.http_client.send_request(path, verb)
         return response.status_code
-        
-        
+
     def _compare_results(self, actual_status_code, expected_status_codes):
-        """Compares the actual response code against expected codes."""
-        expected_list = expected_status_codes if isinstance(expected_status_codes, list) else [expected_status_codes]
-        return "PASS" if str(actual_status_code) in expected_list else "FAIL"
+        """Compares actual vs expected response codes."""
+        return "PASS" if str(actual_status_code) in expected_status_codes else "FAIL"
 
     def format_results(self, unformatted_results):
-        """Formats the results of the verb tampering check in a way to be fed into the report."""
-        module_name = "HTTP Verb Tampering"
-        module_description = "Checks how the API responds to different HTTP verbs/methods."
-        module_table_headers = [ "Path", "Verb", "Expected Response Code" , "Actual Response Code", "Test Result" ]
-        module_table = {
-            "headers": module_table_headers,
-            "rows": unformatted_results
+        """Formats results for HTML reporting."""
+        return {
+            "module": "HTTP Verb Tampering",
+            "description": "Checks how the API responds to different HTTP verbs/methods.",
+            "table": {
+                "headers": ["Path", "Verb", "Expected Response Code", "Actual Response Code", "Test Result"],
+                "rows": unformatted_results,
+            },
         }
-        
-        formatted_results = {
-            "module": module_name,
-            "description": module_description,
-            "table": module_table
-        }
-        return formatted_results

@@ -2,6 +2,7 @@ import argparse
 import sys
 from core.http_client import HTTPClient
 from core.module_loader import load_modules
+from parsers.openapi_parser import OpenAPIParser
 from reports.html_report import HTMLReport
 
 def main():
@@ -9,65 +10,95 @@ def main():
         description="hAPI - A Security Testing Tool for OpenAPI-based APIs"
     )
 
-    # Required Arguments
+    # Global arguments
     parser.add_argument("-u", "--url", required=True, help="Target API URL")
-    parser.add_argument("-o", "--openapi", required=True, help="Path to OpenAPI Spec file (YAML/JSON)")
-    
-    # Optional Arguments
-    parser.add_argument("-m", "--modules", required=True, help="Comma-separated list of security modules (e.g., verb-tampering,headers-check)")
-    parser.add_argument("--header", action="append", help="Custom HTTP headers (e.g., 'Authorization: Bearer xyz')")
-    parser.add_argument("--cookie", action="append", help="Custom cookies (e.g., 'session=123')")
-    parser.add_argument("--proxy", help="HTTP proxy (e.g., 'http://127.0.0.1:8080')")
+    parser.add_argument("-i", "--input", required=True, help="Path to OpenAPI Spec file (YAML/JSON)")
+    parser.add_argument("-f", "--format", required=True, help="Format for the report (HTML, JSON)")
     parser.add_argument("--ignore-ssl", action="store_true", help="Ignore SSL certificate verification")
-    parser.add_argument("--report", help="Path to save the HTML report")
+    parser.add_argument("--proxy", help="HTTP proxy (e.g., 'http://127.0.0.1:8080')")
+    parser.add_argument("-H", "--header", action="append", help="Add a custom header (e.g. \"User-Agent: test\")")
+    parser.add_argument("-C", "--cookie", action="append", help="Add a custom cookie (e.g. \"Cookie: JSESSIONID=test\")")
 
-    # Subcommands
-    subparsers = parser.add_subparsers(dest="command")
 
-    # List available modules
-    list_parser = subparsers.add_parser("list", help="List available security modules")
+    subparsers = parser.add_subparsers(dest="module", help="Security module to run")
+
+    # Dynamically load modules
+    available_modules = load_modules()
+    for module_name, module_class in available_modules.items():
+        module_parser = subparsers.add_parser(module_name, help=f"{module_name} module")
+        # Add module-specific arguments
+        if hasattr(module_class, 'add_arguments'):
+            module_class.add_arguments(module_parser)
+
+    # 'all' subcommand
+    all_parser = subparsers.add_parser("all", help="Run all modules")
 
     args = parser.parse_args()
 
-    if args.command == "list":
-        # Dynamically list available modules
-        print("Available security modules:")
-        for module in load_modules():
-            print(f"- {module}")
-        sys.exit(0)
+    if not args.module:
+        parser.print_help()
+        sys.exit(1)
 
     # Parse custom headers & cookies into dictionaries
-    headers = {h.split(":")[0]: h.split(":")[1] for h in args.header} if args.header else {}
-    cookies = {c.split("=")[0]: c.split("=")[1] for c in args.cookie} if args.cookie else {}
+    headers = {h.split(":", 1)[0]: h.split(":", 1)[1] for h in args.header} if args.header else {}
+    cookies = {c.split("=", 1)[0]: c.split("=", 1)[1] for c in args.cookie} if args.cookie else {}
+
 
     # Create HTTP client with user settings
-    http_client = HTTPClient(args.url, headers=headers, cookies=cookies, verify_ssl=not args.ignore_ssl)
+    http_client = HTTPClient(
+        args.url,
+        headers=headers,
+        cookies=cookies,
+        verify_ssl=not args.ignore_ssl
+        )
 
-
-    # Load selected modules
-    available_modules = load_modules()  # This should return a dictionary of module names -> module classes
-
-    if args.modules.lower() == "all":
-        selected_modules = available_modules.keys()  # Run all modules
-    else:
-        selected_modules = args.modules.split(",")
+    # Parse OpenAPI schema once
+    openapi_parser = OpenAPIParser(args.input)
+    parsed_schema = {
+        "full_schema": openapi_parser.parse_openapi_schema(),
+        "paths": openapi_parser.create_paths_dict(openapi_parser.parse_openapi_schema())
+    }
 
     results = []
 
-    for module_name in selected_modules:
-        module = available_modules.get(module_name)
-        if module:
+    if args.module == "all":
+        # Run all modules
+        # TODO - REVISE THIS. DOESN'T WORK CURRENTLY.
+        for module_name, module_class in available_modules.items():
             print(f"Running {module_name} module...")
-            checker = module(args.url, args.openapi, http_client)
-            results.append(checker.run_check())
+            module_instance = module_class(http_client, parsed_schema, args)
+            raw_results = module_instance.run_check()
+            results.append(module_instance.format_results(raw_results))
+    else:
+        # Run the selected module
+        module_class = available_modules.get(args.module)
+        if module_class:
+            print(f"Running {args.module} module...")
+            module_instance = module_class(http_client, parsed_schema, args)
+            raw_results = module_instance.run_check()
+            results.append(module_instance.format_results(raw_results))
         else:
-            print(f"Module '{module_name}' not found.")
+            print(f"Module '{args.module}' not found.")
+            sys.exit(1)
 
     # Generate Report (if specified)
-    if args.report:
-        report = HTMLReport(results)
-        report.save(args.report)
-        print(f"Report saved to {args.report}")
+    # TODO - THIS LOGIC NEEDS TO BE UPDATED IN ORDER TO PRODUCE OTHER KINDS OF REPORTS AS WELL - JSON, MARKDOWN
+
+    try:
+        if args.format.upper() == "HTML":
+            report = HTMLReport(results)
+            html_page = report.generate()
+            report.save(html_page)
+            print(f"Report saved to {args.output}")
+        elif args.format.upper() == "JSON":
+            # Implement JSON Output here
+            return("JSON output not implemented yet.")
+        else:
+            raise Exception("No such output format")
+    except Exception as e:
+        print(f"Error writing to output file: {e}")
+        sys.exit(1)
+
 
 if __name__ == "__main__":
     main()
