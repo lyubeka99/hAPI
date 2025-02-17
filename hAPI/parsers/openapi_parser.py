@@ -50,6 +50,16 @@ class OpenAPIParser:
             raise OpenAPISchemaError(f"An error occurred while parsing YAML: {e}")
     
     @staticmethod
+    def get_api_title(parsed_openapi_schema):
+        """
+        Extracts the API name/title from the OpenAPI schema.
+        """
+        if "info" not in parsed_openapi_schema:
+            raise OpenAPISchemaError('''The OpenAPI schema does not contain an 
+                                     'info' section so we cannot fetch the API title.''')
+        return parsed_openapi_schema['info']['title']
+    
+    @staticmethod
     def create_paths_dict(parsed_openapi_schema):
         """
         Extracts the 'paths' section from the OpenAPI schema.
