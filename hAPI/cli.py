@@ -52,11 +52,13 @@ def main():
         verify_ssl=not args.ignore_ssl
         )
 
-    # Parse OpenAPI schema once
+    # Parse OpenAPI schema
     openapi_parser = OpenAPIParser(args.input)
+    openapi_parsed_schema = openapi_parser.parse_openapi_schema()
     parsed_schema = {
-        "full_schema": openapi_parser.parse_openapi_schema(),
-        "paths": openapi_parser.create_paths_dict(openapi_parser.parse_openapi_schema())
+        "full_schema": openapi_parsed_schema,
+        "paths": openapi_parser.create_paths_dict(openapi_parsed_schema),
+        "api_title": openapi_parser.get_api_title(openapi_parsed_schema)
     }
 
     results = []
@@ -88,8 +90,9 @@ def main():
         if args.format.upper() == "HTML":
             report = HTMLReport(results)
             html_page = report.generate()
-            report.save(html_page)
-            print(f"Report saved to {args.output}")
+            api_title_formatted = parsed_schema["api_title"].replace(" ","_")
+            report.save(html_page, api_title_formatted)
+            print(f"Report saved to {api_title_formatted}_hAPI_report.html")
         elif args.format.upper() == "JSON":
             # Implement JSON Output here
             return("JSON output not implemented yet.")
