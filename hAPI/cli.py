@@ -16,7 +16,7 @@ def main():
     parser.add_argument("-i", "--input", required=True, help="Path to OpenAPI Spec file (YAML/JSON)")
     parser.add_argument("-f", "--format", required=True, help="Format for the report (HTML, JSON)")
     parser.add_argument("--ignore-ssl", action="store_true", help="Ignore SSL certificate verification")
-    parser.add_argument("--proxy", help="HTTP proxy (e.g. 'http://127.0.0.1:8080')")
+    parser.add_argument("-x", "--proxy", help="HTTP proxy (e.g. 'http://127.0.0.1:8080')")
     parser.add_argument("-H", "--header", help="Add a custom header (e.g. \"User-Agent: test\") ")
     parser.add_argument("-C", "--cookie", help="Add a custom cookie (e.g. \"Cookie: JSESSIONID=test\")")
 
@@ -50,12 +50,21 @@ def main():
     # Parse custom headers & cookies into dictionaries
     headers = {h.split("=")[0]: h.split("=")[1] for h in args.header} if args.header else {}
     cookies = {c.split("=")[0]: c.split("=")[1] for c in args.cookie} if args.cookie else {}
+    proxies = {
+        "http":f"{args.proxy}",
+        "https":f"{args.proxy}"
+    }
+
+    ### DEBUG
+    print(f"Proxy parameter contains: {args.proxy}")
+    ### DEBUG
 
     # Create HTTP client with user settings
     http_client = HTTPClient(
         args.url,
         headers=headers,
         cookies=cookies,
+        proxies=proxies,
         verify_ssl=not args.ignore_ssl
     )
 
