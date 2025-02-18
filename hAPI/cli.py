@@ -1,10 +1,32 @@
 import argparse
 import sys
 import json
-from core.http_client import HTTPClient
+from hapi import run_hapi
 from core.module_loader import load_modules
-from parsers.openapi_parser import OpenAPIParser
-from reports.html_report import HTMLReport
+
+def parse_headers(header_str):
+    headers = {}
+    if header_str:
+        headers_tmp = header_str.split(";")
+        for header_tmp in headers_tmp:
+            if ":" not in header_tmp:
+                print(f"Warning: Ignoring malformed header '{header_tmp}'.")
+                continue
+            key, value = header_tmp.split(":", 1)
+            headers[key.strip()] = value.strip()
+    return headers
+
+def parse_cookies(cookie_str):
+    cookies = {}
+    if cookie_str:
+        cookies_tmp = cookie_str.split(";")
+        for cookie_tmp in cookies_tmp:
+            if "=" not in cookie_tmp:
+                print(f"Warning: Ignoring malformed cookie '{cookie_tmp}'.")
+                continue
+            key, value = cookie_tmp.split("=", 1)
+            cookies[key.strip()] = value.strip()
+    return cookies
 
 def main():
     parser = argparse.ArgumentParser(
@@ -14,148 +36,44 @@ def main():
     # Global arguments
     parser.add_argument("-u", "--url", required=True, help="Target API URL")
     parser.add_argument("-i", "--input", required=True, help="Path to OpenAPI Spec file (YAML/JSON)")
-    parser.add_argument("-f", "--format", required=True, help="Format for the report (HTML, JSON)")
+    parser.add_argument("-f", "--format", required=True, choices=["HTML", "JSON"], help="Report format")
     parser.add_argument("-x", "--proxy", help="HTTP proxy (e.g. 'http://127.0.0.1:8080')")
-    parser.add_argument("-H", "--header", help="Add custom headers (e.g. 'User-Agent: test; X-Api-Key: testapikey') ")
-    parser.add_argument("-C", "--cookie", help="Add a custom cookie (e.g. 'Cookie: JSESSIONID=test')")
+    parser.add_argument("-H", "--headers", help="Custom headers (e.g. 'User-Agent: test; X-Api-Key: testapikey')")
+    parser.add_argument("-C", "--cookies", help="Custom cookies (e.g. 'SessionID=test; AuthToken=xyz')")
     parser.add_argument("--ignore-ssl", action="store_true", help="Ignore SSL certificate verification")
 
-    # Subparsers for modules
+    # Load modules BEFORE defining subcommands - prevents argparse error
+    available_modules = load_modules()
+    
+    # Define subparsers for modules
     subparsers = parser.add_subparsers(dest="module", help="Security module to run")
 
-    # Dynamically load modules
-    available_modules = load_modules()
-
-    # Add arguments for each module
+    # Dynamically add available modules
     for module_name, module_class in available_modules.items():
         module_parser = subparsers.add_parser(module_name, help=f"{module_name} module")
         if hasattr(module_class, 'add_arguments'):
             module_class.add_arguments(module_parser)
 
-    # 'all' subcommand
+    # 'all' subcommand - runs all modules
     all_parser = subparsers.add_parser("all", help="Run all modules")
-    
-    # Now allow module-specific arguments to be passed under 'all'
     for module_name, module_class in available_modules.items():
         if hasattr(module_class, 'add_arguments'):
             module_class.add_arguments(all_parser)
 
+    # Parse arguments
     args = parser.parse_args()
 
-    # Validate args
+    # ✅ **Ensure a module was selected**
     if not args.module:
         parser.print_help()
         sys.exit(1)
 
-    # Parse custom headers into dictionaries
-    headers = {}
-    if args.header:
-        headers_tmp = args.header.split(";")
-        for header_tmp in headers_tmp:
-            if ":" not in header_tmp:
-                print(f"Warning: Ignoring malformed header '{header_tmp}'. Headers should be in 'Key: Value' format.")
-                continue  # Skip malformed headers
+    # Parse the cookies and headers before passing them to run_hapi()
+    args.cookies = parse_cookies(args.cookies)
+    args.headers = parse_headers(args.headers)
 
-            key, value = header_tmp.split(":", 1)
-            key, value = key.strip(), value.strip()
-
-            if key in headers:
-                print(f"Warning: Duplicate header '{key}' detected. Overwriting previous value.")
-
-            headers[key] = value
-    
-    # Parse custom cookies into dictionaries
-    cookies = {}
-    if args.cookie:
-        cookies_tmp = args.cookie.split(";")
-        for cookie_tmp in cookies_tmp:
-            if "=" not in cookie_tmp:
-                print(f"Warning: Ignoring malformed cookie '{cookie_tmp}'. Cookies should be in 'Key=Value' format.")
-                continue  # Skip malformed cookies
-
-            key, value = cookie_tmp.split("=", 1)
-            key, value = key.strip(), value.strip()
-
-            if key in cookies:
-                print(f"Warning: Duplicate cookie '{key}' detected. Overwriting previous value.")
-
-            cookies[key] = value
-
-    # Create HTTP client with user settings
-    http_client = HTTPClient(
-        args.url,
-        headers=headers,
-        cookies=cookies,
-        proxies={"http":f"{args.proxy}","https":f"{args.proxy}"} if args.proxy else None,
-        verify_ssl=not args.ignore_ssl
-    )
-
-    # Parse OpenAPI schema
-    openapi_parser = OpenAPIParser(args.input)
-    openapi_parsed_schema = openapi_parser.parse_openapi_schema()
-    parsed_schema = {
-        "full_schema": openapi_parsed_schema,
-        "paths": openapi_parser.create_paths_dict(openapi_parsed_schema),
-        "api_title": openapi_parser.get_api_title(openapi_parsed_schema)
-    }
-
-    results = []
-
-    if args.module == "all":
-        # Run all modules and pass relevant arguments to each module
-        for module_name, module_class in available_modules.items():
-            print(f"Running {module_name} module...")
-
-            # Extract module-specific arguments dynamically
-            module_specific_args = {}
-            if hasattr(module_class, "add_arguments"):
-                module_parser = argparse.ArgumentParser()
-                module_class.add_arguments(module_parser)
-                module_specific_args = {key: value for key, value in vars(args).items() if key in vars(module_parser.parse_args([]))}
-
-            # Pass only relevant arguments to the module instance
-            module_instance = module_class(http_client, parsed_schema, argparse.Namespace(**module_specific_args))
-            raw_results = module_instance.run_check()
-            results.append(module_instance.format_results(raw_results))
-    else:
-        # Run the selected module
-        module_class = available_modules.get(args.module)
-        if module_class:
-            print(f"Running {args.module} module...")
-            module_instance = module_class(http_client, parsed_schema, args)
-            raw_results = module_instance.run_check()
-            results.append(module_instance.format_results(raw_results))
-        else:
-            print(f"Module '{args.module}' not found.")
-            sys.exit(1)
-
-    # Generate Report
-    try:
-        api_title_formatted = parsed_schema["api_title"].replace(" ","_")
-
-        if args.format.upper() == "HTML":
-            report = HTMLReport(results)
-            html_report = report.generate()
-            report.save(html_report, api_title_formatted)
-            print(f"Report saved to {api_title_formatted}_hAPI_report.html")
-        elif args.format.upper() == "JSON":
-            json_tmp_report = {
-                "modules" : results
-            }
-            json_report = json.dumps(json_tmp_report, indent=4)
-            try:
-                with open(f"{api_title_formatted}_hAPI_report.json", "w") as json_file:
-                    json_file.write(json_report)
-                print(f"Report saved to {api_title_formatted}_hAPI_report.json")
-            except Exception as e:
-                print(f"Error writing JSON report to file: {e}")
-                sys.exit(1)
-        else:
-            raise Exception("No such output format")
-    except Exception as e:
-        print(f"Error writing to output file: {e}")
-        sys.exit(1)
-
+    # Pass the arguments to the main logic in hapi.py
+    run_hapi(args)
 
 if __name__ == "__main__":
     main()

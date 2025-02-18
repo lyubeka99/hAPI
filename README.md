@@ -1,15 +1,68 @@
-### hAPI is not yet ready. I accidentally made the repo public and I do not want to make it private again. First beta version to be released by the end of the week!
 # hAPI (hackAPI) - BETA
-hAPI (hackAPI) is a tool that automates testing for common security misconfigurations in REST APIs. The plan is to expand the tool to cover other API paradigms like SOAP, GraphQL, JSON-RPC, etc., and expand on the number of misconfigurations it can look for. Stay tuned.
+hAPI (hackAPI) is a tool that automates testing for common security misconfigurations in REST APIs. You can select a subset of checks to perform or simply run all. The tool will run the tests against your API and create a report with the results in HTML or JSON format.
 
-## Licenses
-This project is licensed under the MIT License.
-
-However, for testing purposes I used the OpenAPI Petstore example JSON as well as the [Full Stack FastAPI Template](https://github.com/fastapi/full-stack-fastapi-template). Big thanks to these projects. If you are a contributor on these projects and you want me to include a license or attribution - please let me know, I would be happy to. 
+Currently, hAPI is in beta release and only supports an HTTP verb tampering test. However, more functionality is coming very soon! Stay tuned!
 
 ## Usage
 
-The tool will allow users to choose any combinations of modules they would like to run. Each module consists of a separate security check. The tool generates an HTML report containing the results of each chosen module.
+Display available options and modules.
+```
+python3 hAPI/cli.py -h
+```
+
+Display available options for a specific module.
+
+```
+python3 hAPI/cli.py verb_tampering -h
+```
+
+The module 'all' allows you to pass any module-specific arguments.
+```
+python3 hAPI/cli.py all -h
+```
+
+Regardsless of which module you choose, the mandatory arguments are:
+* `-u` URL
+* `-i` input (path to the OpenAPI spec)
+* `-f` format (HTML/JSON)
+
+```
+python3 hAPI/cli.py -u http://127.0.0.1:8000 -i tests/localtest.json -f HTML -x http://127.0.0.1:5000 <MODULE NAME>
+```
+
+Optionally, you may specify headers and cookies.
+```
+python3 hAPI/cli.py -u http://127.0.0.1:8000 -i tests/localtest.json -f HTML -C 'JSESSIONID=cookies; Test=test' -H 'User-Agent: EVIL; X-Api-Key:xyz' -x http://127.0.0.1:5000 <MODULE NAME>
+```
+
+If you need to route thorugh a web proxy like BurpSuite or OWASP ZAP, you can use `--proxy`.
+```
+python3 hAPI/cli.py -u http://127.0.0.1:8000 -i tests/localtest.json -f HTML -C 'JSESSIONID=cookies; Test=test' -H 'User-Agent: EVIL; X-Api-Key:xyz' -x http://127.0.0.1:5000 --proxy <MODULE NAME>
+```
+
+If you are testing a private API and you need to disable certificate verification, you can use `--ignore-ssl`. WARNING: This will make your traffic interceptable and thus vulnerable to a Man-in-the-Middle (MitM) attack.
+```
+python3 hAPI/cli.py -u http://127.0.0.1:8000 -i tests/localtest.json -f HTML -C 'JSESSIONID=cookies; Test=test' -H 'User-Agent: EVIL; X-Api-Key:xyz' -x http://127.0.0.1:5000 --ignore-ssl <MODULE NAME>
+```
+
+#### Some modules also have module-specific arguments. For exmaple, if you want to pass a wordlist to the verb tampering check:
+```
+python3 hAPI/cli.py -u http://127.0.0.1:8000 -i tests/localtest.json -f HTML -C 'JSESSIONID=cookies; Test=test' -H 'User-Agent: EVIL; X-Api-Key:xyz' -x http://127.0.0.1:5000 --ignore-ssl verb_tampering --vt-wordlist /path/to/file
+```
+
+### All
+
+This module runs all available modules.
+
+Requires a URL, a path to your OpenAPI specification in JSON or YAML and the output format (HTML/JSON).
+```
+python3 hAPI/cli.py -u http://127.0.0.1:8000 -i tests/localtest.json -f HTML -x http://127.0.0.1:5000 all
+```
+
+Optionally, you may specify headers and cookies.
+```
+python3 hAPI/cli.py -u http://127.0.0.1:8000 -i tests/localtest.json -f HTML -C 'JSESSIONID=cookies; Test=test' -H 'User-Agent: EVIL; X-Api-Key:xyz' -x http://127.0.0.1:5000 all
+```
 
 ### HTTP Verb Tampering Check
 
@@ -20,3 +73,8 @@ The module will fuzz each endpoint with a list of HTTP verbs. The wordlist can b
 ## Limitiations
 * Currently, the tool only works with an OpenAPI schema as input. I will try to include more possible inputs depending on different use cases.
 * The tool generates reports in HTML and JSON. Let me know if you would like any other report formats.
+
+## Licenses
+This project is licensed under the MIT License.
+
+However, for testing purposes I used the OpenAPI Petstore example JSON as well as the [Full Stack FastAPI Template](https://github.com/fastapi/full-stack-fastapi-template). Big thanks to these projects. If you are a contributor on these projects and you want me to include a license or attribution - please let me know, I would be happy to. 
