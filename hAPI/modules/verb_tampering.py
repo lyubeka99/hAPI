@@ -16,13 +16,13 @@ class VerbTampering:
         self.http_client = http_client
         self.openapi_schema = parsed_schema["full_schema"]
         self.openapi_paths = parsed_schema["paths"]
-        self.http_verb_wordlist = args.wordlist if args.wordlist else self.DEFAULT_VERB_WORDLIST
+        self.http_verb_wordlist = args.wordlist if args.vt_wordlist else self.DEFAULT_VERB_WORDLIST
         self.results = []
 
     @classmethod
     def add_arguments(cls, parser):
         """Defines CLI arguments specific to this module."""
-        parser.add_argument("--wordlist", help="Path to custom wordlist for HTTP verbs")
+        parser.add_argument("--vt-wordlist", help="Path to a custom wordlist for HTTP verbs for the verb tampering module.")
 
     def run_check(self):
         for path, details in self.openapi_paths.items():
