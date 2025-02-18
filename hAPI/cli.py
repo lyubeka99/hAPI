@@ -65,10 +65,24 @@ def main():
 
     if args.module == "all":
         # Run all modules
-        # TODO - REVISE THIS. DOESN'T WORK CURRENTLY.
         for module_name, module_class in available_modules.items():
             print(f"Running {module_name} module...")
-            module_instance = module_class(http_client, parsed_schema, args)
+
+            # Copy args and add missing module-specific arguments
+            module_args = vars(args).copy()
+            if hasattr(module_class, 'add_arguments'):
+                module_parser = argparse.ArgumentParser()
+                module_class.add_arguments(module_parser)
+                module_specific_args = {action.dest for action in module_parser._actions}
+
+                # Add missing arguments to module_args
+                for arg in module_specific_args:
+                    if arg not in module_args:
+                        module_args[arg] = None  # Or default
+
+                module_args = argparse.Namespace(**module_args)
+
+            module_instance = module_class(http_client, parsed_schema, module_args)
             raw_results = module_instance.run_check()
             results.append(module_instance.format_results(raw_results))
     else:
@@ -84,8 +98,7 @@ def main():
             sys.exit(1)
 
     # Generate Report (if specified)
-    # TODO - THIS LOGIC NEEDS TO BE UPDATED IN ORDER TO PRODUCE OTHER KINDS OF REPORTS AS WELL - JSON, MARKDOWN
-
+    # TODO - THIS LOGIC NEEDS TO BE UPDATED IN ORDER TO PRODUCE OTHER KINDS OF REPORTS AS WELL - JSON, CSV, MARKDOWN
     try:
         if args.format.upper() == "HTML":
             report = HTMLReport(results)
