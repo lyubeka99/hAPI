@@ -18,6 +18,6 @@ The HTTP verb tampering check creates a table of the expected responses versus t
 The module will fuzz each endpoint with a list of HTTP verbs. The wordlist can be supplied by the user. If not, the default wordlist (brorowed from [SecLists](https://github.com/danielmiessler/SecLists/blob/master/Fuzzing/http-request-methods.txt)) will be used. It will then cross-check the application's response with the expected response from the OpenAPI specification. If the response code differs, the entry will be flagged. 
 
 ## Limitiation and future plans
-Currently, the tool only works with an OpenAPI schema as input. I plan to expand the possible inputs.
+1. Currently, the tool only works with an OpenAPI schema as input. I plan to expand the possible inputs.
 
-Currently, the tool only creates reports in HTML format. If there is demand for such functionality, I may add other output formats such as JSON, Markdown (or other). Let me know.
+2. The tool generates reports in HTML and JSON. Let me know if you would like any other report formats.
