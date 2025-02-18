@@ -1,5 +1,3 @@
-import requests
-
 class VerbTampering:
     """Performs HTTP verb tampering checks against an OpenAPI-defined API."""
 
@@ -16,7 +14,7 @@ class VerbTampering:
         self.http_client = http_client
         self.openapi_schema = parsed_schema["full_schema"]
         self.openapi_paths = parsed_schema["paths"]
-        self.http_verb_wordlist = args.wordlist if args.vt_wordlist else self.DEFAULT_VERB_WORDLIST
+        self.http_verb_wordlist = args.vt_wordlist if args.vt_wordlist else self.DEFAULT_VERB_WORDLIST
         self.results = []
 
     @classmethod
