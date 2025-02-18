@@ -43,5 +43,5 @@ class HTTPClient:
                 print(f"Untrusted certificate error:\n{e}.\n\nTo disable certificate verification, use --ignore-ssl. This will expose your traffic to man-in-the-middle attacks. Exiting.")
                 raise SystemExit(1)
         except requests.RequestException as e:
-            print(f"Error sending request: {e}.")
+            print(f"Error sending request: {e}. Exiting.")
             raise SystemExit(1)
