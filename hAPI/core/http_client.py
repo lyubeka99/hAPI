@@ -35,9 +35,13 @@ class HTTPClient:
         :return: Response object or None if request fails.
         """
         try:
-            final_url = f"{self.base_url}{path}"
-            response = self.session.request(verb.upper(), final_url, **kwargs)
-            return response
+            try:
+                final_url = f"{self.base_url}{path}"
+                response = self.session.request(verb.upper(), final_url, **kwargs)
+                return response
+            except requests.exceptions.SSLError as e:
+                print(f"Untrusted certificate error:\n{e}.\n\nTo disable certificate verification, use --ignore-ssl. This will expose your traffic to man-in-the-middle attacks. Exiting.")
+                exit(1)
         except requests.RequestException as e:
-            print(f"Error sending request: {e}")
-            return None
+            print(f"Error sending request: {e}.")
+            exit(1)
