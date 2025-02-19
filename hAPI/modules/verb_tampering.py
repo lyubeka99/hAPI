@@ -67,5 +67,5 @@ class VerbTampering:
             "table": {
                 "headers": ["Path", "Verb", "Expected Response Code", "Actual Response Code", "Test Result"],
                 "rows": unformatted_results,
-            },
+            }
         }

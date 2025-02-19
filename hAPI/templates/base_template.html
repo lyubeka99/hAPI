@@ -84,9 +84,16 @@
                     {% endfor %}
             </table>
 
-            {% elif module.key-value-pairs %}
-                <p>KEY VALUE PAIRS</p>
-            {% elif module.free-text %}
+            {% elif module.key_value_pairs %}
+            <p>KEY VALUE PAIRS</p>
+            <ul>
+                {% for pair in module.key_value_pairs %}
+                    {% for key, value in pair.items() %}
+                        <li><strong>{{ key }}:</strong> {{ value }}</li>
+                    {% endfor %}
+                {% endfor %}
+            </ul>
+            {% elif module.free_text %}
                 <p>FREE TEXT</p>
             {% endif %}
         {% endfor %}
