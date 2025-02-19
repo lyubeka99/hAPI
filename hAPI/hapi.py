@@ -11,7 +11,7 @@ def run_hapi(args, module_specific_args):
     
     # Load modules dynamically
     available_modules = load_modules()
-
+    
     # Parse OpenAPI schema
     openapi_parser = OpenAPIParser(args.input)
     openapi_parsed_schema = openapi_parser.parse_openapi_schema()
@@ -21,7 +21,7 @@ def run_hapi(args, module_specific_args):
         "api_title": openapi_parser.get_api_title(openapi_parsed_schema)
     }
 
-    # Create HTTP client with user settings
+    # Create HTTP client
     http_client = HTTPClient(
         args.url,
         headers=args.headers,
@@ -32,17 +32,22 @@ def run_hapi(args, module_specific_args):
 
     results = []
 
-    # Run selected modules
+    # 🛠 **Fix: Pass correct args to each module**
     if "all" in args.modules:
-        selected_modules = available_modules.keys()
+        selected_modules = list(available_modules.keys())  # Expand 'all' to include all modules
     else:
-        selected_modules = args.modules
+        selected_modules = args.modules  # Run only the selected modules
 
     for module_name in selected_modules:
         module_class = available_modules.get(module_name)
         if module_class:
             print(f"Running {module_name} module...")
-            module_args = module_specific_args.get(module_name, argparse.Namespace())  # Get module-specific args
+
+            # Extract only this module's args from module_specific_args
+            module_parser = argparse.ArgumentParser(add_help=False)
+            if hasattr(module_class, 'add_arguments'):
+                module_class.add_arguments(module_parser)
+            module_args, _ = module_parser.parse_known_args(module_specific_args)
 
             module_instance = module_class(http_client, parsed_schema, module_args)
             raw_results = module_instance.run_check()
@@ -53,6 +58,7 @@ def run_hapi(args, module_specific_args):
 
     # Generate report
     generate_report(parsed_schema["api_title"], results, args.format)
+
 
 def generate_report(api_title, results, format):
     """ Generates and saves the report in the specified format. """
