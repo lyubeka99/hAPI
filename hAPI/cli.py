@@ -28,9 +28,40 @@ def parse_cookies(cookie_str):
             cookies[key.strip()] = value.strip()
     return cookies
 
+def show_help_for_modules(selected_modules, available_modules):
+    """ Dynamically generate help for selected modules. """
+    print("\n=== hAPI - A Security Testing Tool for OpenAPI-based REST APIs ===\n")
+    print("Usage: python3 cli.py -u <URL> -i <SpecFile> -f <Format> <Modules> [Module Arguments]\n")
+    print("Global Options:")
+    print("  -u, --url         Target API URL")
+    print("  -i, --input       Path to OpenAPI Spec file (YAML/JSON)")
+    print("  -f, --format      Report format (HTML, JSON)")
+    print("  -x, --proxy       HTTP proxy (e.g. 'http://127.0.0.1:8080')")
+    print("  -H, --headers     Custom headers (e.g. 'User-Agent: test; X-Api-Key: testapikey')")
+    print("  -C, --cookies     Custom cookies (e.g. 'SessionID=test; AuthToken=xyz')")
+    print("  --ignore-ssl      Ignore SSL certificate verification")
+    
+    print("\nAvailable Modules:")
+    for module in available_modules.keys():
+        print(f"  - {module}")
+
+    print("\nModule-Specific Arguments:")
+    for module_name in selected_modules:
+        if module_name in available_modules:
+            module_class = available_modules[module_name]
+            module_parser = argparse.ArgumentParser(prog=f"{module_name} module", add_help=False)
+            if hasattr(module_class, 'add_arguments'):
+                module_class.add_arguments(module_parser)
+            print(f"\n{module_name} Options:")
+            module_parser.print_help()
+
+    sys.exit(0)
+
 def main():
     parser = argparse.ArgumentParser(
-        description="hAPI - A Security Testing Tool for OpenAPI-based REST APIs"
+        description="hAPI - A Security Testing Tool for OpenAPI-based REST APIs",
+        allow_abbrev=False,
+        add_help=False  # Disable automatic help to handle it manually
     )
 
     # Global arguments
@@ -41,39 +72,40 @@ def main():
     parser.add_argument("-H", "--headers", help="Custom headers (e.g. 'User-Agent: test; X-Api-Key: testapikey')")
     parser.add_argument("-C", "--cookies", help="Custom cookies (e.g. 'SessionID=test; AuthToken=xyz')")
     parser.add_argument("--ignore-ssl", action="store_true", help="Ignore SSL certificate verification")
+    parser.add_argument("-h", "--help", action="store_true", help="Show this help message and exit")
 
-    # Load modules BEFORE defining subcommands - prevents argparse error
+    # Load modules dynamically
     available_modules = load_modules()
-    
-    # Define subparsers for modules
-    subparsers = parser.add_subparsers(dest="module", help="Security module to run")
 
-    # Dynamically add available modules
-    for module_name, module_class in available_modules.items():
-        module_parser = subparsers.add_parser(module_name, help=f"{module_name} module")
-        if hasattr(module_class, 'add_arguments'):
-            module_class.add_arguments(module_parser)
+    # Add module selection (multiple choices allowed)
+    parser.add_argument(
+        "modules",
+        nargs="+",
+        choices=list(available_modules.keys()) + ["all"],
+        help="Security modules to run (e.g., 'verb_tampering rate_limiting')"
+    )
 
-    # 'all' subcommand - runs all modules
-    all_parser = subparsers.add_parser("all", help="Run all modules")
-    for module_name, module_class in available_modules.items():
-        if hasattr(module_class, 'add_arguments'):
-            module_class.add_arguments(all_parser)
+    # Parse initial known args
+    known_args, remaining_args = parser.parse_known_args()
 
-    # Parse arguments
-    args = parser.parse_args()
+    # Show dynamic help if -h is used
+    if known_args.help:
+        show_help_for_modules(known_args.modules, available_modules)
 
-    # Ensure a module was selected
-    if not args.module:
-        parser.print_help()
-        sys.exit(1)
+    # Parse global args
+    known_args.cookies = parse_cookies(known_args.cookies)
+    known_args.headers = parse_headers(known_args.headers)
 
-    # Parse the cookies and headers before passing them to run_hapi()
-    args.cookies = parse_cookies(args.cookies)
-    args.headers = parse_headers(args.headers)
+    # Dynamically parse module-specific arguments
+    module_specific_args = {}
+    for module_name in known_args.modules:
+        if module_name in available_modules and hasattr(available_modules[module_name], 'add_arguments'):
+            module_parser = argparse.ArgumentParser(add_help=False)
+            available_modules[module_name].add_arguments(module_parser)
+            module_specific_args[module_name], _ = module_parser.parse_known_args(remaining_args)
 
-    # Pass the arguments to the main logic in hapi.py
-    run_hapi(args)
+    # Pass arguments to main logic
+    run_hapi(known_args, module_specific_args)
 
 if __name__ == "__main__":
     main()

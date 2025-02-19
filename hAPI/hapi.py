@@ -4,12 +4,14 @@ from core.http_client import HTTPClient
 from core.module_loader import load_modules
 from parsers.openapi_parser import OpenAPIParser
 from reports.html_report import HTMLReport
+import argparse
 
-def run_hapi(args):
+def run_hapi(args, module_specific_args):
     """ Main function to run hAPI with parsed arguments. """
     
     # Load modules dynamically
     available_modules = load_modules()
+
     # Parse OpenAPI schema
     openapi_parser = OpenAPIParser(args.input)
     openapi_parsed_schema = openapi_parser.parse_openapi_schema()
@@ -30,22 +32,23 @@ def run_hapi(args):
 
     results = []
 
-    # Run modules
-    if args.module == "all":
-        for module_name, module_class in available_modules.items():
-            print(f"Running {module_name} module...")
-            module_instance = module_class(http_client, parsed_schema, args)
-            raw_results = module_instance.run_check()
-            results.append(module_instance.format_results(raw_results))
+    # Run selected modules
+    if "all" in args.modules:
+        selected_modules = available_modules.keys()
     else:
-        module_class = available_modules.get(args.module)
+        selected_modules = args.modules
+
+    for module_name in selected_modules:
+        module_class = available_modules.get(module_name)
         if module_class:
-            print(f"Running {args.module} module...")
-            module_instance = module_class(http_client, parsed_schema, args)
+            print(f"Running {module_name} module...")
+            module_args = module_specific_args.get(module_name, argparse.Namespace())  # Get module-specific args
+
+            module_instance = module_class(http_client, parsed_schema, module_args)
             raw_results = module_instance.run_check()
             results.append(module_instance.format_results(raw_results))
         else:
-            print(f"Module '{args.module}' not found.")
+            print(f"Module '{module_name}' not found.")
             sys.exit(1)
 
     # Generate report
