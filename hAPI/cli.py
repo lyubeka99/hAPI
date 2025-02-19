@@ -30,6 +30,9 @@ def parse_cookies(cookie_str):
 
 def show_help_for_modules(selected_modules, available_modules):
     """ Dynamically generate help for selected modules. """
+    if "all" in selected_modules:
+        selected_modules = list(available_modules.keys())  # Expand "all" to include all modules
+
     print("\n=== hAPI - A Security Testing Tool for OpenAPI-based REST APIs ===\n")
     print("Usage: python3 cli.py -u <URL> -i <SpecFile> -f <Format> <Modules> [Module Arguments]\n")
     print("Global Options:")
