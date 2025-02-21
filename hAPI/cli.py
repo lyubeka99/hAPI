@@ -99,14 +99,24 @@ def main():
     known_args.cookies = parse_cookies(known_args.cookies)
     known_args.headers = parse_headers(known_args.headers)
 
-    # Dynamically parse module-specific arguments
+    # Expand "all" to include all available modules
+    if "all" in known_args.modules:
+        selected_modules = list(available_modules.keys())
+    else:
+        selected_modules = known_args.modules
+
+    # Dynamically parse module-specific arguments for all selected modules
     module_specific_args = {}
-    for module_name in known_args.modules:
+    
+    for module_name in selected_modules:
+        module_parser = argparse.ArgumentParser(add_help=False)
+        
         if module_name in available_modules and hasattr(available_modules[module_name], 'add_arguments'):
-            module_parser = argparse.ArgumentParser(add_help=False)
             available_modules[module_name].add_arguments(module_parser)
             module_specific_args[module_name], _ = module_parser.parse_known_args(remaining_args)
-
+        else:
+            module_specific_args[module_name] = argparse.Namespace()  # Ensure module gets an empty Namespace if no args
+    
     # Pass arguments to main logic
     run_hapi(known_args, module_specific_args)
 
