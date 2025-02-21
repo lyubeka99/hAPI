@@ -35,17 +35,19 @@ class RateLimiting:
         parser.add_argument("--rl-endpoints", help="A comma-separated list of target endpoints.")
 
     def run_check(self):
+        """Runs the rate limiting check across endpoints with error handling."""
+        
         request_threshold = self.threshold
         sensitive_endpoints = self.find_endpoints()
         baseline_endpoint = self._find_baseline_endpoint(sensitive_endpoints)
 
-        # If all endpoints are sensitive, there is no baseline endpoint
         if baseline_endpoint:
             endpoint_list = [baseline_endpoint]
         else:
             endpoint_list = []
 
         if self.endpoints:
+            endpoint_list = []
             endpoints_to_test = self.endpoints.split(",")
         elif sensitive_endpoints:
             endpoints_to_test = sensitive_endpoints
@@ -55,41 +57,47 @@ class RateLimiting:
         endpoint_list.extend(endpoints_to_test)
 
         for endpoint in endpoint_list:
-            result_row = [endpoint]
-            found_headers = []
-            found_status_codes = set()
-            response_times = []
+            try:
+                result_row = [endpoint]
+                found_headers = []
+                found_status_codes = set()
+                response_times = []
 
-            for i in range(request_threshold):
-                resp = self._send_request(endpoint)
-                response_times.append(resp.elapsed.total_seconds()*1000)
-                
-                for header in self.RATE_LIMIT_HEADERS:
-                    if header in resp.headers:
-                        found_headers.append((header, resp.headers[header]))
-                
-                if resp.status_code in self.SUSPICIOUS_STATUS_CODES:
-                    found_status_codes.add(resp.status_code)
+                for i in range(request_threshold):
+                    resp = self._send_request(endpoint)
+                    response_times.append(round(resp.elapsed.total_seconds() * 1000, 4))  # Ensure 4 decimal places
+                    
+                    for header in self.RATE_LIMIT_HEADERS:
+                        if header in resp.headers:
+                            found_headers.append((header, resp.headers[header]))
 
-            batch_size = request_threshold // 3
-            batch_1_avg = round(sum(response_times[:batch_size]) / batch_size, 4)
-            batch_2_avg = round(sum(response_times[batch_size:2 * batch_size]) / batch_size, 4)
-            batch_3_avg = round(sum(response_times[2 * batch_size:]) / batch_size, 4)
+                    if resp.status_code in self.SUSPICIOUS_STATUS_CODES:
+                        found_status_codes.add(resp.status_code)
 
-            heuristic_result = self.determine_heuristic_result(
-                found_headers, found_status_codes, batch_1_avg, batch_2_avg, batch_3_avg
-            )
+                batch_size = request_threshold // 3
+                batch_1_avg = round(sum(response_times[:batch_size]) / batch_size, 4)
+                batch_2_avg = round(sum(response_times[batch_size:2 * batch_size]) / batch_size, 4)
+                batch_3_avg = round(sum(response_times[2 * batch_size:]) / batch_size, 4)
 
-            result_row.extend([
-                found_headers if found_headers else None,
-                list(found_status_codes) if found_status_codes else None,
-                batch_1_avg,
-                batch_2_avg,
-                batch_3_avg,
-                heuristic_result
-            ])
+                heuristic_result = self.determine_heuristic_result(
+                    found_headers, found_status_codes, batch_1_avg, batch_2_avg, batch_3_avg
+                )
 
-            self.results.append(result_row)
+                result_row.extend([
+                    found_headers if found_headers else None,
+                    list(found_status_codes) if found_status_codes else None,
+                    batch_1_avg,
+                    batch_2_avg,
+                    batch_3_avg,
+                    heuristic_result
+                ])
+
+                self.results.append(result_row)
+
+            except Exception as e:
+                print(f"Error: Failed to process endpoint '{endpoint}' due to: {e}. Skipping to next.")
+                continue  # Skip this endpoint and move to the next
+
         return self.results
 
     def _send_request(self, path):
@@ -99,12 +107,32 @@ class RateLimiting:
         return response  # Keep it as a Response object
     
     def _get_verbs_for_path(self, path):
-        """ Returns the first HTTP verb defined for that path. """
-        verbs = self.openapi_paths.get(path).keys()
-        if verbs:
-            return list(verbs)
-        else:
-            return ["GET"]
+        """Returns the available HTTP verbs for a given path, handling variations like trailing slashes."""
+        
+        normalized_path = path.rstrip("/")  # Remove trailing slashes
+        available_paths = {p.rstrip("/"): p for p in self.openapi_paths.keys()}  # Normalize all schema paths
+
+        # Find a matching path
+        matched_path = available_paths.get(normalized_path)
+
+        if not matched_path:
+            raise ValueError(f"Error: The provided endpoint '{path}' was not found in the OpenAPI schema. "
+                            f"Did you mean '{self._suggest_similar_path(path)}'?")
+
+        verbs = self.openapi_paths[matched_path].keys()
+        return list(verbs) if verbs else ["GET"]
+    
+    def _suggest_similar_path(self, user_path):
+        """Suggests the closest matching path from the OpenAPI schema."""
+        
+        from difflib import get_close_matches  # Helps find similar strings
+
+        normalized_path = user_path.rstrip("/")
+        available_paths = [p.rstrip("/") for p in self.openapi_paths.keys()]
+        
+        close_matches = get_close_matches(normalized_path, available_paths, n=1, cutoff=0.7)
+        
+        return close_matches[0] if close_matches else "Check your OpenAPI schema for valid paths."
 
     def _find_baseline_endpoint(self, sensitive_endpoints_list):
         """Extracts a non-senstive endpoint from the OpenAPI schema to serve as baseline for the rate limiting checks."""

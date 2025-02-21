@@ -81,7 +81,7 @@ class OpenAPIParser:
         Returns a list of HTTP methods supported for a specific API endpoint.
         """
         if path not in openapi_paths:
-            raise OpenAPISchemaError("Path '{path}' not found in the OpenAPI schema.")
+            raise OpenAPISchemaError(f"Path '{path}' not found in the OpenAPI schema.")
         return list(openapi_paths[path].keys())
     
     @staticmethod
