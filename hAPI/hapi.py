@@ -32,7 +32,7 @@ def run_hapi(args, module_specific_args):
 
     results = []
 
-    # 🛠 **Fix: Pass correct args to each module**
+    # For each module, get its optional arguments, parse them and create pass them to the object instance
     if "all" in args.modules:
         selected_modules = list(available_modules.keys())  # Expand 'all' to include all modules
     else:
@@ -43,18 +43,17 @@ def run_hapi(args, module_specific_args):
         if module_class:
             print(f"Running {module_name} module...")
 
-            # Extract only this module's args from module_specific_args
-            module_parser = argparse.ArgumentParser(add_help=False)
-            if hasattr(module_class, 'add_arguments'):
-                module_class.add_arguments(module_parser)
-            module_args, _ = module_parser.parse_known_args(module_specific_args)
+            # Get the pre-parsed module args from the dictionary object
+            module_args = module_specific_args.get(module_name, argparse.Namespace())
 
+            # Pass the correct args to the module
             module_instance = module_class(http_client, parsed_schema, module_args)
             raw_results = module_instance.run_check()
             results.append(module_instance.format_results(raw_results))
         else:
             print(f"Module '{module_name}' not found.")
             sys.exit(1)
+
 
     # Generate report
     generate_report(parsed_schema["api_title"], results, args.format)
