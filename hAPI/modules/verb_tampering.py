@@ -1,3 +1,5 @@
+import os
+
 class VerbTampering:
     """Performs HTTP verb tampering checks against an OpenAPI-defined API."""
 
@@ -14,7 +16,7 @@ class VerbTampering:
         self.http_client = http_client
         self.openapi_schema = parsed_schema["full_schema"]
         self.openapi_paths = parsed_schema["paths"]
-        self.http_verb_wordlist = args.vt_wordlist if args.vt_wordlist else self.DEFAULT_VERB_WORDLIST
+        self.http_verb_wordlist = self._load_wordlist(args.vt_wordlist)
         self.results = []
 
     @classmethod
@@ -58,9 +60,21 @@ class VerbTampering:
     def _compare_results(self, actual_status_code, expected_status_codes):
         """Compares actual vs expected response codes."""
         return "PASS" if str(actual_status_code) in expected_status_codes else "FAIL"
+    
+    def _load_wordlist(self, filepath):
+        """Loads HTTP verbs from a file if provided; otherwise, uses default list."""
+        if filepath:
+            if os.path.exists(filepath) and os.path.isfile(filepath):
+                with open(filepath, "r", encoding="utf-8") as file:
+                    return [line.strip().upper() for line in file if line.strip()]
+            else:
+                print(f"Warning: Wordlist file '{filepath}' not found. Using default verbs.")
+        
+        return self.DEFAULT_VERB_WORDLIST
 
     def format_results(self, unformatted_results):
         """Formats results for HTML reporting."""
+        descirption = '''Checks how the API responds to different HTTP verbs/methods.'''
         return {
             "module": "HTTP Verb Tampering",
             "description": "Checks how the API responds to different HTTP verbs/methods.",
