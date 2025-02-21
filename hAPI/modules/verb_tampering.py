@@ -75,9 +75,17 @@ class VerbTampering:
     def format_results(self, unformatted_results):
         """Formats results for HTML reporting."""
         descirption = '''Checks how the API responds to different HTTP verbs/methods.'''
+        references = [
+            {"OWASP API Security Top 10": "https://owasp.org/www-project-api-security/"},
+            {"HTTP Methods Explained": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods"}
+            ]
+        remediation = "Ensure that only necessary HTTP methods are enabled and properly secured."
+
         return {
             "module": "HTTP Verb Tampering",
-            "description": "Checks how the API responds to different HTTP verbs/methods.",
+            "description": descirption,
+            "references": references,
+            "remediation": remediation,
             "table": {
                 "headers": ["Path", "Verb", "Expected Response Code", "Actual Response Code", "Test Result"],
                 "rows": unformatted_results,

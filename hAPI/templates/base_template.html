@@ -1,102 +1,180 @@
-
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>hAPI Security Audit Report</title>
     <style>
+        /* General Styles */
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f4f4f4;
+            background-color: #f9f9f9;
+            color: #333;
         }
 
         header {
-            background-color: #0073e6;
+            background-color: #1E1E2F;
             color: white;
             text-align: center;
-            padding: 15px;
+            padding: 20px;
+            font-size: 24px;
+            font-weight: bold;
         }
 
         main {
+            max-width: 900px;
+            margin: 20px auto;
+            background: white;
             padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
         }
 
+        h2 {
+            border-bottom: 2px solid #0073e6;
+            padding-bottom: 5px;
+        }
+
+        p {
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        /* Table Styles */
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-
-        table, th, td {
-            border: 1px solid black;
+            margin-top: 15px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.1);
         }
 
         th, td {
-            padding: 10px;
+            padding: 12px;
             text-align: left;
         }
 
+        th {
+            background-color: #0073e6;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        /* Pass/Fail Highlighting */
         .pass {
-            background-color: #c8e6c9;  /* Green */
+            background-color: #c8e6c9;
+            color: #155724;
+            font-weight: bold;
+            text-align: center;
         }
 
         .fail {
-            background-color: #ffcccb;  /* Red */
+            background-color: #ffcccb;
+            color: #721c24;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        /* Reference & Remediation Styles */
+        .reference-container, .remediation-container {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f4f4f4;
+            border-left: 5px solid #0073e6;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .reference-container ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .reference-container li {
+            margin: 5px 0;
+        }
+
+        .reference-container a {
+            text-decoration: none;
+            color: #0073e6;
+            font-weight: bold;
+        }
+
+        .reference-container a:hover {
+            text-decoration: underline;
         }
 
         footer {
             text-align: center;
-            padding: 10px;
+            padding: 15px;
             background-color: #ddd;
+            margin-top: 20px;
+            border-radius: 0 0 10px 10px;
         }
     </style>
 </head>
 <body>
     <header>
-        <h1> Security Audit Report</h1>
+        <h1>hAPI Security Audit Report</h1>
     </header>
     <main>
         {% for module in modules %}
             <h2>{{ module.module }}</h2>
             <p>{{ module.description }}</p>
+
             {% if module.table %}
             <table>
                 <tr>
                     {% for header in module.table.headers %}
-                        <th> {{ header }} </th>
+                        <th>{{ header }}</th>
                     {% endfor %}
                 </tr>
-                    {% for row in module.table.rows %}
-                        <tr>
-                            {% for entry in row %}
-                                {% if entry == 'PASS' %}
-                                    <td class="pass">{{ entry }}</td>
-                                {% elif entry == 'FAIL' %}
-                                    <td class="fail">{{ entry }}</td>
-                                {% else %}
-                                    <td>{{ entry }}</td>
-                                {% endif %}
-                            {% endfor %}
-                        </tr>
+                {% for row in module.table.rows %}
+                <tr>
+                    {% for entry in row %}
+                        {% if entry == 'PASS' %}
+                            <td class="pass">{{ entry }}</td>
+                        {% elif entry == 'FAIL' %}
+                            <td class="fail">{{ entry }}</td>
+                        {% else %}
+                            <td>{{ entry }}</td>
+                        {% endif %}
                     {% endfor %}
-            </table>
-
-            {% elif module.key_value_pairs %}
-            <p>KEY VALUE PAIRS</p>
-            <ul>
-                {% for pair in module.key_value_pairs %}
-                    {% for key, value in pair.items() %}
-                        <li><strong>{{ key }}:</strong> {{ value }}</li>
-                    {% endfor %}
+                </tr>
                 {% endfor %}
-            </ul>
-            {% elif module.free_text %}
-                <p>FREE TEXT</p>
+            </table>
             {% endif %}
+
+            {% if module.references %}
+            <div class="reference-container">
+                <h3>References</h3>
+                <ul>
+                    {% for ref in module.references %}
+                        {% for article, url in ref.items() %}
+                            <li><a href="{{ url }}" target="_blank">{{ article }}</a></li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            {% if module.remediation %}
+            <div class="remediation-container">
+                <h3>Remediation</h3>
+                <p>{{ module.remediation }}</p>
+            </div>
+            {% endif %}
+
         {% endfor %}
     </main>
+    <footer>
+        <p>Generated by hAPI Security Audit Tool</p>
+    </footer>
 </body>
-</html> 
+</html>
