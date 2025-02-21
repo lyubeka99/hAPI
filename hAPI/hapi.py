@@ -1,3 +1,4 @@
+import os
 import sys
 import json
 from core.http_client import HTTPClient
@@ -60,23 +61,45 @@ def run_hapi(args, module_specific_args):
 
 
 def generate_report(api_title, results, format):
-    """ Generates and saves the report in the specified format. """
+    """Generates and saves the report in the specified format."""
     try:
-        api_title_formatted = api_title.replace(" ", "_")
-
         if format.upper() == "HTML":
             report = HTMLReport(results)
-            html_report = report.generate()
-            report.save(html_report, api_title_formatted)
-            print(f"Report saved to {api_title_formatted}_hAPI_report.html")
+            report_content = report.generate()
         elif format.upper() == "JSON":
             json_tmp_report = {"modules": results}
-            json_report = json.dumps(json_tmp_report, indent=4)
-            with open(f"{api_title_formatted}_hAPI_report.json", "w") as json_file:
-                json_file.write(json_report)
-            print(f"Report saved to {api_title_formatted}_hAPI_report.json")
+            report_content = json.dumps(json_tmp_report, indent=4)
         else:
             raise ValueError("No such output format")
+
+        # Use our new centralized function to save the report
+        save_report_to_file(report_content, api_title, format)
+
     except Exception as e:
         print(f"Error writing to output file: {e}")
         sys.exit(1)
+
+def save_report_to_file(content, api_title, format):
+    """Handles saving reports to files with incremental naming to avoid overwriting."""
+    api_title_formatted = api_title.replace(" ", "_")
+    base_filename = f"{api_title_formatted}_hAPI_report"
+    
+    if format.upper() == "HTML":
+        file_extension = ".html"
+    elif format.upper() == "JSON":
+        file_extension = ".json"
+    else:
+        raise ValueError("Unsupported format for saving reports")
+
+    filename = base_filename + file_extension
+    counter = 1
+
+    # Increment filename if file exists
+    while os.path.exists(filename):
+        filename = f"{base_filename}({counter}){file_extension}"
+        counter += 1
+
+    with open(filename, "w", encoding="utf-8") as file:
+        file.write(content)
+
+    print(f"Report saved to {filename}")

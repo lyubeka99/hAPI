@@ -12,8 +12,3 @@ class HTMLReport(BaseReport):
     def generate(self):
         template = self.env.get_template("base_template.html")
         return template.render(modules=self.results)
-    
-    def save(self, templated_report, api_title):
-        f = open(f"{api_title}_hAPI_report.html", "w")
-        f.write(templated_report)
-        f.close()
