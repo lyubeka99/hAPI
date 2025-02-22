@@ -126,7 +126,11 @@
     <main>
         {% for module in modules %}
             <h2>{{ module.module }}</h2>
-            <p>{{ module.description }}</p>
+            {% if module.description_paragraphs %}
+                {% for paragraph in module.description_paragraphs %}
+                    <p>{{ paragraph }}</p>
+                {% endfor %}
+            {% endif %}
 
             {% if module.table %}
             <table>
@@ -164,10 +168,12 @@
             </div>
             {% endif %}
 
-            {% if module.remediation %}
+            {% if module.remediation_paragraphs %}
             <div class="remediation-container">
                 <h3>Remediation</h3>
-                <p>{{ module.remediation }}</p>
+                    {% for paragraph in module.remediation_paragraphs %}
+                        <p>{{ paragraph }}</p>
+                    {% endfor %}
             </div>
             {% endif %}
 

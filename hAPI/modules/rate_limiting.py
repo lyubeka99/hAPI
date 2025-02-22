@@ -192,21 +192,25 @@ class RateLimiting:
 
 
     def format_results(self, unformatted_results):
-        description = f'''Tests whether a target REST API has any rate limiting measures. 
-        <p>A value of None for the columns <strong>Rate Limit Headers Present</strong> or 
-        <strong>Rate Limit Response Status Codes</strong> indicates that no such headers were returned by the API.</p>
-        <p>The number of requests - {self.threshold} - has been split into 3 batches. If you notice a sensible increase 
-        in response time between batches, this is a good sign that the API has request throttling enabled.'''
+        description_paragraphs = [
+            "Tests whether a target REST API has any rate limiting measures.",
+            "A value of None for the columns <strong>Rate Limit Headers Present</strong> or <strong>Rate Limit Response Status Codes</strong> indicates that no such headers were returned by the API.",
+            f"The number of requests - {self.threshold} - has been split into 3 batches. If you notice a sensible increase in response time between batches, this is a good sign that the API has request throttling enabled."
+        ]
         references = [
             {"OWASP: API Security":"https://owasp.org/API-Security/editions/2023/en/0xa4-unrestricted-resource-consumption/"},
             {"OWASP: Blocking Brute Force Attacks":"https://owasp.org/www-community/controls/Blocking_Brute_Force_Attacks"}
         ]
-        remediation = '''Rate limiting involves enforcing quotas on the number of requests allowed from a single source within a fixed time window (such as 10 requests per second from an IP address). This is an effective technique against brute force attacks which aim to constantly flood the application with login attempts. By analyzing legitimate user traffic patterns, the application can establish reasonable thresholds for a rate limiting policy. Additionally, account lockout policies can automatically disable login access after a predefined number of consecutive failed attempts. This denies adversaries further retries on guessed or leaked credentials.Combined with CAPTCHA challenges on login pages, which force automation to solve visual puzzles, these rate limiting and lockout mechanisms create artificial roadblocks that force brute force methods to consume precious time and resources, rendering wide scale attacks largely infeasible. Proper configuration ensures legitimate users face minimal disruption from these defenses.'''
+        remediation_paragraphs = [
+            "Rate limiting involves enforcing quotas on the number of requests allowed from a single source within a fixed time window (such as 10 requests per second from an IP address). This is an effective technique against brute force attacks which aim to constantly flood the application with login attempts. By analyzing legitimate user traffic patterns, the application can establish reasonable thresholds for a rate limiting policy.",
+            "Additionally, account lockout policies can automatically disable login access after a predefined number of consecutive failed attempts. This denies adversaries further retries on guessed or leaked credentials.",
+            "Combined with CAPTCHA challenges on login pages, which force automation to solve visual puzzles, these rate limiting and lockout mechanisms create artificial roadblocks that force brute force methods to consume precious time and resources, rendering wide scale attacks largely infeasible. Proper configuration ensures legitimate users face minimal disruption from these defenses."
+        ]
         return {
             "module": "Rate Limiting",
-            "description": description,
+            "description_paragraphs": description_paragraphs,
             "references": references,
-            "remediation": remediation,
+            "remediation_paragraphs": remediation_paragraphs,
             "table": {
                 "headers": [
                     "Endpoint", 
