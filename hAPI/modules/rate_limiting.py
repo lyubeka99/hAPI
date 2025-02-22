@@ -96,7 +96,7 @@ class RateLimiting:
 
             except Exception as e:
                 print(f"Error: Failed to process endpoint '{endpoint}' due to: {e}. Skipping to next.")
-                continue  # Skip this endpoint and move to the next
+                continue
 
         return self.results
 
@@ -104,7 +104,7 @@ class RateLimiting:
         """Sends an HTTP request and returns the response object."""
         http_verb = self._get_verbs_for_path(path)[0].upper()
         response = self.http_client.send_request(path, http_verb)
-        return response  # Keep it as a Response object
+        return response
     
     def _get_verbs_for_path(self, path):
         """Returns the available HTTP verbs for a given path, handling variations like trailing slashes."""
@@ -125,7 +125,7 @@ class RateLimiting:
     def _suggest_similar_path(self, user_path):
         """Suggests the closest matching path from the OpenAPI schema."""
         
-        from difflib import get_close_matches  # Helps find similar strings
+        from difflib import get_close_matches
 
         normalized_path = user_path.rstrip("/")
         available_paths = [p.rstrip("/") for p in self.openapi_paths.keys()]

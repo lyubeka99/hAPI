@@ -57,7 +57,7 @@ class CommonSecurityHeaders:
             return response
         except Exception as e:
             print(f"Warning: Request to '{path}' failed: {e}")
-            return type("FakeResponse", (), {"headers": {}})()  # Return empty headers to prevent crashes
+            return type("FakeResponse", (), {"headers": {}})()
 
     def format_results(self, unformatted_results):
         """Formats the results into a structured format for output."""
