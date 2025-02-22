@@ -63,13 +63,13 @@ class CommonSecurityHeaders:
         """Formats the results into a structured format for output."""
         description_paragraphs = [
             "This module checks for some common HTTP security headers used in REST APIs.",
-            '''<ul><li>HTTP Strict Transport Security (HSTS) - ensures that browsers only communicate with a website over HTTPS, 
+            '''<ul><li><strong>HTTP Strict Transport Security (HSTS)</strong> - ensures that browsers only communicate with a website over HTTPS, 
             preventing protocol downgrade attacks and mitigating man-in-the-middle (MITM) attacks.</li>''',
-            '''<li>X-Content-Type-Options - Prevents MIME-type sniffing by forcing the browser to respect the declared Content-Type header, 
+            '''<li><strong>X-Content-Type-Options</strong> - Prevents MIME-type sniffing by forcing the browser to respect the declared Content-Type header, 
             mitigating certain types of cross-site scripting (XSS) and content injection attacks.</li>''',
-            '''<li>Server - reveals details about the web server software (e.g., Apache/2.4.41), 
+            '''<li><strong>Server</strong> - reveals details about the web server software (e.g., Apache/2.4.41), 
             which attackers can use to fingerprint the system and target known vulnerabilities.</li>''',
-            '''<li>X-Powered-By - Similar to the Server header, X-Powered-By exposes backend technology (e.g., X-Powered-By: 
+            '''<li><strong>X-Powered-By</strong> - Similar to the Server header, X-Powered-By exposes backend technology (e.g., X-Powered-By: 
             PHP/7.4 or Express), making it easier for attackers to craft targeted exploits.</li></ul>'''
         ]
 
