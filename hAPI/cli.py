@@ -1,6 +1,6 @@
 import argparse
 import sys
-import json
+import os
 from hapi import run_hapi
 from core.module_loader import load_modules
 
@@ -121,4 +121,11 @@ def main():
     run_hapi(known_args, module_specific_args)
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\nInterrupted. Exiting...")
+        try:
+            sys.exit(130)
+        except SystemExit:
+            os._exit(130)
