@@ -195,7 +195,7 @@ class RateLimiting:
         description_paragraphs = [
             "Tests whether a target REST API has any rate limiting measures.",
             "A value of None for the columns <strong>Rate Limit Headers Present</strong> or <strong>Rate Limit Response Status Codes</strong> indicates that no such headers were returned by the API.",
-            f"The number of requests - {self.threshold} - has been split into 3 batches. If you notice a sensible increase in response time between batches, this is a good sign that the API has request throttling enabled."
+            f"The number of requests - {self.threshold} - has been split into 3 batches. If you notice a significant increase (> 50%) in response time between batches, this is a good sign that the API has request throttling enabled."
         ]
         references = [
             {"OWASP: API Security":"https://owasp.org/API-Security/editions/2023/en/0xa4-unrestricted-resource-consumption/"},

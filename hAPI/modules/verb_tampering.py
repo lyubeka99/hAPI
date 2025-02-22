@@ -76,14 +76,28 @@ class VerbTampering:
         """Formats results for HTML reporting."""
         module_name = "HTTP Verb Tampering"
         description_paragraphs = [
-            "Checks how the API responds to different HTTP verbs/methods."
+            '''HTTP Verb Tampering is a security vulnerability where an attacker manipulates HTTP methods (verbs) such as 
+            GET, POST, PUT, DELETE, and OPTIONS to bypass security controls and gain unauthorized access to restricted resources. 
+            This issue arises when web applications enforce access controls based solely on HTTP methods but fail 
+            to properly validate or restrict them.''',
+            '''For example, an application may allow POST requests for user login but may not restrict HEAD or OPTIONS requests, 
+            potentially leaking sensitive information. Similarly, if an application restricts DELETE requests for regular users 
+            but fails to prevent them via alternative verbs like TRACE or PATCH, an attacker might exploit this oversight 
+            to delete resources without proper authorization.''',
+            '''Note that failed tests do not necessarily mean that a vulnerability is present in your API. They merely indicate that
+            the API responded with a code that is not defined in your OpenAPI spec. This could be due to an error, malformed request 
+            or even imprefect OpenAPI documentation.'''
             ]
         references = [
             {"OWASP API Security Top 10": "https://owasp.org/www-project-api-security/"},
             {"HTTP Methods Explained": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods"}
             ]
         remediation_paragraphs = [
-            "Ensure that only necessary HTTP methods are enabled and properly secured."
+            '''Enforce proper access controls: Implement server-side authorization based on roles and permissions, independent of the HTTP verb used. 
+            Restrict sensitive operations (e.g., DELETE, PUT) to authenticated and authorized users only.''',
+            '''Whitelist Allowed Methods - Explicitly define and enforce the allowed HTTP methods in the application and web server configuration. 
+            Reject or return 405 Method Not Allowed for unsupported or unused HTTP verbs.''',
+            '''Disable unnecessary HTTP methods (e.g., TRACE, OPTIONS) via web server configuration (Apache, Nginx, IIS).'''
         ]
 
         return {
