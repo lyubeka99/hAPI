@@ -18,8 +18,8 @@ class BasicAuth:
     def add_arguments(cls, parser):
         """Defines CLI arguments specific to this module."""
         parser.add_argument("--ba-endpoints", help="A comma-separated list of target endpoints.")
-        parser.add_argument("--ba-username", help="Valid username for authentication testing.")
-        parser.add_argument("--ba-password", help="Valid password for authentication testing.")
+        parser.add_argument("--ba-username", help="Valid username for basic authentication testing.")
+        parser.add_argument("--ba-password", help="Valid password for basic authentication testing.")
 
     def run_check(self):
         """Runs the HTTP Basic Authentication test."""
