@@ -29,7 +29,7 @@ class BasicAuth:
             if not self.openapi_paths:
                 print("No OpenAPI schema provided and no endpoints specified. Skipping HTTP Basic Auth check.")
                 return []
-            selected_endpoints = random.sample(self.openapi_paths, min(5, len(self.openapi_paths)))  # Pick 3 random endpoints
+            selected_endpoints = random.sample(self.openapi_paths, min(5, len(self.openapi_paths)))  # Pick 5 random endpoints
 
         for endpoint in selected_endpoints:
             result_row = [endpoint]
