@@ -99,12 +99,16 @@ class VerbTampering:
             Reject or return 405 Method Not Allowed for unsupported or unused HTTP verbs.''',
             '''Disable unnecessary HTTP methods (e.g., TRACE, OPTIONS) via web server configuration (Apache, Nginx, IIS).'''
         ]
+        verification_commands = [
+            '''curl -k -X PATCH https://<DOMAIN NAME/IP ADDRESS>/api/v1/example'''
+        ]
 
         return {
             "module": module_name,
             "description_paragraphs": description_paragraphs,
             "references": references,
             "remediation_paragraphs": remediation_paragraphs,
+            "verification_commands": verification_commands,
             "table": {
                 "headers": ["Path", "Verb", "Expected Response Code", "Actual Response Code", "Test Result"],
                 "rows": unformatted_results,

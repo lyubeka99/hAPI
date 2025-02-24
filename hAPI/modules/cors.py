@@ -86,11 +86,16 @@ class Cors:
             "Restrict access to sensitive data: It is important to restrict access to sensitive data to only trusted domains. This can be done by implementing access control measures such as authentication and authorization."
         ]
 
+        verification_commands = [
+            '''curl -k -I -H 'Origin: https://evil.com' https://<DOMAIN NAME/IP ADDRESS>/api/v1/example'''
+        ]
+
         return {
             "module": "CORS Security",
             "description_paragraphs": description_paragraphs,
             "references": references,
             "remediation_paragraphs": remediation_paragraphs,
+            "verification_commands": verification_commands,
             "table": {
                 "headers": [
                     "Endpoint",

@@ -83,11 +83,16 @@ class CommonSecurityHeaders:
             "Remove 'Server' and 'X-Powered-By' headers to prevent unnecessary exposure of technology stack information."
         ]
 
+        verification_commands = [
+            '''curl -k -I https://<DOMAIN NAME/IP ADDRESS>/api/v1/example | grep 'Strict-Transport-Security\\|X-Content-Type-Options\\|Server\\|X-Powered-By' -i'''
+        ]
+
         return {
             "module": "Common Security Headers",
             "description_paragraphs": description_paragraphs,
             "references": references,
             "remediation_paragraphs": remediation_paragraphs,
+            "verification_commands": verification_commands,
             "table": {
                 "headers": ["Endpoint", "Header", "Is Present?", "Header Value", "Test Result"],
                 "rows": unformatted_results,

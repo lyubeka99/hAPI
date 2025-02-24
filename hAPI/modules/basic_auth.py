@@ -109,11 +109,16 @@ class BasicAuth:
             '''Enforce HTTPS: If Basic Auth must be used, never transmit credentials over HTTP - always enforce HTTPS.'''
         ]
 
+        verification_commands = [
+            '''curl -k -u username:password https://<DOMAIN NAME/IP ADDRESS>/api/v1/example'''
+        ]
+
         return {
             "module": "HTTP Basic Authentication",
             "description_paragraphs": description_paragraphs,
             "references": references,
             "remediation_paragraphs": remediation_paragraphs,
+            "verification_commands": verification_commands,
             "table": {
                 "headers": [
                     "Endpoint", 

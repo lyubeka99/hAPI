@@ -110,6 +110,34 @@
             text-decoration: underline;
         }
 
+        .verification-container {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f4f4f4;
+            border-left: 5px solid #0073e6;
+            border-radius: 8px;
+        }
+
+        .verification-container h3 {
+            margin-top: 0;
+        }
+
+        .verification-container pre {
+            display: block;
+            margin: 10px auto;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: #1e1e1e;
+            color: #dcdcdc;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-width: 95%;
+        }
+
         footer {
             text-align: center;
             padding: 15px;
@@ -155,6 +183,25 @@
             </table>
             {% endif %}
 
+            {% if module.remediation_paragraphs %}
+            <div class="remediation-container">
+                <h3>Remediation</h3>
+                    {% for paragraph in module.remediation_paragraphs %}
+                        <p>{{ paragraph }}</p>
+                    {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if module.verification_commands %}
+            <div class="verification-container">
+                <h3>Verification Commands</h3>
+                {% for command in module.verification_commands %}
+                    <pre><code class="language-bash">{{ command | e}}</code></pre>
+                {% endfor %}
+            </div>
+            {% endif %}
+        
+
             {% if module.references %}
             <div class="reference-container">
                 <h3>References</h3>
@@ -165,15 +212,6 @@
                         {% endfor %}
                     {% endfor %}
                 </ul>
-            </div>
-            {% endif %}
-
-            {% if module.remediation_paragraphs %}
-            <div class="remediation-container">
-                <h3>Remediation</h3>
-                    {% for paragraph in module.remediation_paragraphs %}
-                        <p>{{ paragraph }}</p>
-                    {% endfor %}
             </div>
             {% endif %}
 

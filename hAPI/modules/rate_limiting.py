@@ -206,11 +206,17 @@ class RateLimiting:
             "Additionally, account lockout policies can automatically disable login access after a predefined number of consecutive failed attempts. This denies adversaries further retries on guessed or leaked credentials.",
             "Combined with CAPTCHA challenges on login pages, which force automation to solve visual puzzles, these rate limiting and lockout mechanisms create artificial roadblocks that force brute force methods to consume precious time and resources, rendering wide scale attacks largely infeasible. Proper configuration ensures legitimate users face minimal disruption from these defenses."
         ]
+        verification_commands = [
+            '''
+for i in {1..150}; do curl -k -o /dev/null -s -w "Request $i: HTTP Status: %{http_code}, Time: %{time_total}s\n" 'https://<DOMAIN NAME/IP ADDRESS>/api/v1/example' --header '<ACCESS DETAILS>'; done'''
+        ]
+
         return {
             "module": "Rate Limiting",
             "description_paragraphs": description_paragraphs,
             "references": references,
             "remediation_paragraphs": remediation_paragraphs,
+            "verification_commands": verification_commands,
             "table": {
                 "headers": [
                     "Endpoint", 
