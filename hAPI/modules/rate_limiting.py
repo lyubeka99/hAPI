@@ -201,11 +201,12 @@ class RateLimiting:
             {"OWASP: API Security":"https://owasp.org/API-Security/editions/2023/en/0xa4-unrestricted-resource-consumption/"},
             {"OWASP: Blocking Brute Force Attacks":"https://owasp.org/www-community/controls/Blocking_Brute_Force_Attacks"}
         ]
-        remediation_paragraphs = [
-            "Rate limiting involves enforcing quotas on the number of requests allowed from a single source within a fixed time window (such as 10 requests per second from an IP address). This is an effective technique against brute force attacks which aim to constantly flood the application with login attempts. By analyzing legitimate user traffic patterns, the application can establish reasonable thresholds for a rate limiting policy.",
-            "Additionally, account lockout policies can automatically disable login access after a predefined number of consecutive failed attempts. This denies adversaries further retries on guessed or leaked credentials.",
-            "Combined with CAPTCHA challenges on login pages, which force automation to solve visual puzzles, these rate limiting and lockout mechanisms create artificial roadblocks that force brute force methods to consume precious time and resources, rendering wide scale attacks largely infeasible. Proper configuration ensures legitimate users face minimal disruption from these defenses."
-        ]
+        remediation_paragraphs = [  
+            "Rate limiting restricts the number of requests a single source can send within a specific time frame (e.g., 10 requests per second per IP). This helps prevent brute-force attacks by limiting repeated login attempts. By analyzing normal user behavior, the application can define appropriate thresholds for an effective rate limiting policy.",  
+            "Implementing account lockout policies further enhances security by temporarily disabling login access after a set number of consecutive failed attempts. This prevents attackers from continuously guessing or using leaked credentials.",  
+            "When combined with CAPTCHA challenges on login pages, which require solving visual puzzles to verify human interaction, rate limiting and account lockout mechanisms significantly slow down brute-force attacks. These defenses make large-scale attacks impractical while ensuring minimal disruption for legitimate users."  
+        ]  
+
         verification_commands = [
             '''
 for i in {1..150}; do curl -k -o /dev/null -s -w "Request $i: HTTP Status: %{http_code}, Time: %{time_total}s\n" 'https://<DOMAIN NAME/IP ADDRESS>/api/v1/example' --header '<ACCESS DETAILS>'; done'''
