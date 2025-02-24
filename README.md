@@ -1,4 +1,4 @@
-# hAPI (hackAPI) - BETA
+# hAPI (hackAPI)
 hAPI (hackAPI) is a tool that automates testing for common security misconfigurations in REST APIs. You can select a subset of checks to perform or simply run all. The tool will run the tests against your API and create a report with the results in HTML or JSON format.
 
 Currently, hAPI is in beta release and supports tests for the following misconfigurations:
