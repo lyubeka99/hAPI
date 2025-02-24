@@ -30,7 +30,7 @@ cd hAPI
 python3 hAPI/cli.py
 ``` 
 
-3. If you get any missing libraries erros, install requirements.
+3. If you get any missing libraries errors, install requirements.
 ```bash
 pip install -r requirements.txt
 ```
