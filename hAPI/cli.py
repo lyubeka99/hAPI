@@ -95,6 +95,10 @@ def main():
     # Parse initial known args
     known_args, remaining_args = parser.parse_known_args()
 
+    # Normalize URL
+    if known_args.url[-1] == "/":
+        known_args.url = known_args.url[:-1]
+    
     # Parse headers and cookies
     known_args.cookies = parse_cookies(known_args.cookies)
     known_args.headers = parse_headers(known_args.headers)
