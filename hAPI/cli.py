@@ -61,10 +61,18 @@ def show_help_for_modules(selected_modules, available_modules):
     sys.exit(0)
 
 def main():
+    # Load available modules dynamically
+    available_modules = load_modules()
+
+    # If "-h" or "--help" is provided, check for modules in the arguments
+    if "-h" in sys.argv or "--help" in sys.argv:
+        # Extract modules from command-line arguments (if any)
+        modules_from_cli = [arg for arg in sys.argv[1:] if arg in available_modules or arg == "all"]
+        show_help_for_modules(modules_from_cli, available_modules)
+
     parser = argparse.ArgumentParser(
         description="hAPI - A Security Testing Tool for OpenAPI-based REST APIs",
-        allow_abbrev=False,
-        add_help=False  # Disable automatic help to handle it manually
+        allow_abbrev=False
     )
 
     # Global arguments
@@ -75,10 +83,6 @@ def main():
     parser.add_argument("-H", "--headers", help="Custom headers (e.g. 'User-Agent: test; X-Api-Key: testapikey')")
     parser.add_argument("-C", "--cookies", help="Custom cookies (e.g. 'SessionID=test; AuthToken=xyz')")
     parser.add_argument("--ignore-ssl", action="store_true", help="Ignore SSL certificate verification")
-    parser.add_argument("-h", "--help", action="store_true", help="Show this help message and exit")
-
-    # Load modules dynamically
-    available_modules = load_modules()
 
     # Add module selection (multiple choices allowed)
     parser.add_argument(
@@ -91,32 +95,23 @@ def main():
     # Parse initial known args
     known_args, remaining_args = parser.parse_known_args()
 
-    # Show dynamic help if -h is used
-    if known_args.help:
-        show_help_for_modules(known_args.modules, available_modules)
-
-    # Parse global args
+    # Parse headers and cookies
     known_args.cookies = parse_cookies(known_args.cookies)
     known_args.headers = parse_headers(known_args.headers)
 
     # Expand "all" to include all available modules
-    if "all" in known_args.modules:
-        selected_modules = list(available_modules.keys())
-    else:
-        selected_modules = known_args.modules
+    selected_modules = list(available_modules.keys()) if "all" in known_args.modules else known_args.modules
 
     # Dynamically parse module-specific arguments for all selected modules
     module_specific_args = {}
-    
     for module_name in selected_modules:
         module_parser = argparse.ArgumentParser(add_help=False)
-        
         if module_name in available_modules and hasattr(available_modules[module_name], 'add_arguments'):
             available_modules[module_name].add_arguments(module_parser)
             module_specific_args[module_name], _ = module_parser.parse_known_args(remaining_args)
         else:
-            module_specific_args[module_name] = argparse.Namespace()  # Ensure module gets an empty Namespace if no args
-    
+            module_specific_args[module_name] = argparse.Namespace()  # Ensure module gets an empty Namespace
+
     # Pass arguments to main logic
     run_hapi(known_args, module_specific_args)
 
