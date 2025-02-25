@@ -153,6 +153,793 @@
     </header>
     <main>
         
+            <h2>HTTP Basic Authentication</h2>
+            
+                
+                    <p>HTTP Basic Authentication transmits credentials (username and password) in the Authorization header as a Base64-encoded string, 
+            making it suceptible to multiple attack verctors.</p>
+                
+                    <p><ul><li>If used over HTTP (instead of HTTPS), credentials can be easily captured by attackers.</li></p>
+                
+                    <p><li>Since there is no challenge-response mechanism, an attacker who captures the request can reuse the credentials.</li></p>
+                
+                    <p><li>Browsers and some clients may persistently store credentials, increasing exposure.</li></ul></p>
+                
+                    <p>This authentication method is outdated and should be replaced with more secure alternatives.</p>
+                
+                    <p><mark>If your API supports password-based authentication, rerun this test with --ba-username and --ba-password for more accurate results. If your API doesn't support password-based authentication and uses keys instead, you can disregard this message.<mark></p>
+                
+            
+
+            
+            <table>
+                <tr>
+                    
+                        <th>Endpoint</th>
+                    
+                        <th>Response Code without Basic Auth</th>
+                    
+                        <th>Response Code with Test Credentials</th>
+                    
+                        <th>Response Code with Real Credentials</th>
+                    
+                        <th>WWW-Authenticate Header</th>
+                    
+                        <th>Test Result</th>
+                    
+                </tr>
+                
+                <tr>
+                    
+                        
+                            <td>/api/v1/users/{user_id}</td>
+                        
+                    
+                        
+                            <td>401</td>
+                        
+                    
+                        
+                            <td>401</td>
+                        
+                    
+                        
+                            <td>Not Tested</td>
+                        
+                    
+                        
+                            <td>Bearer</td>
+                        
+                    
+                        
+                            <td>No Basic Auth Detected</td>
+                        
+                    
+                </tr>
+                
+                <tr>
+                    
+                        
+                            <td>/api/v1/items/{id}</td>
+                        
+                    
+                        
+                            <td>401</td>
+                        
+                    
+                        
+                            <td>401</td>
+                        
+                    
+                        
+                            <td>Not Tested</td>
+                        
+                    
+                        
+                            <td>Bearer</td>
+                        
+                    
+                        
+                            <td>No Basic Auth Detected</td>
+                        
+                    
+                </tr>
+                
+                <tr>
+                    
+                        
+                            <td>/api/v1/login/access-token</td>
+                        
+                    
+                        
+                            <td>405</td>
+                        
+                    
+                        
+                            <td>405</td>
+                        
+                    
+                        
+                            <td>Not Tested</td>
+                        
+                    
+                        
+                            <td>Not Present</td>
+                        
+                    
+                        
+                            <td>No Basic Auth Detected</td>
+                        
+                    
+                </tr>
+                
+                <tr>
+                    
+                        
+                            <td>/api/v1/users/me</td>
+                        
+                    
+                        
+                            <td>401</td>
+                        
+                    
+                        
+                            <td>401</td>
+                        
+                    
+                        
+                            <td>Not Tested</td>
+                        
+                    
+                        
+                            <td>Bearer</td>
+                        
+                    
+                        
+                            <td>No Basic Auth Detected</td>
+                        
+                    
+                </tr>
+                
+                <tr>
+                    
+                        
+                            <td>/api/v1/login/test-token</td>
+                        
+                    
+                        
+                            <td>405</td>
+                        
+                    
+                        
+                            <td>405</td>
+                        
+                    
+                        
+                            <td>Not Tested</td>
+                        
+                    
+                        
+                            <td>Not Present</td>
+                        
+                    
+                        
+                            <td>No Basic Auth Detected</td>
+                        
+                    
+                </tr>
+                
+            </table>
+            
+
+            
+            <div class="remediation-container">
+                <h3>Remediation</h3>
+                    
+                        <p>Migrate to More Secure Authentication Methods: Use OAuth 2.0, API tokens, JWTs, or mutual TLS authentication instead. 
+            If password-based authentication is required, implement Digest Auth or modern authentication mechanisms (e.g., OpenID Connect).</p>
+                    
+                        <p>Enforce HTTPS: If Basic Auth must be used, never transmit credentials over HTTP - always enforce HTTPS.</p>
+                    
+            </div>
+            
+
+            
+            <div class="verification-container">
+                <h3>Verification Commands</h3>
+                
+                    <pre><code class="language-bash">curl -k -u username:password https://&lt;DOMAIN NAME/IP ADDRESS&gt;/api/v1/example</code></pre>
+                
+            </div>
+            
+        
+
+            
+            <div class="reference-container">
+                <h3>References</h3>
+                <ul>
+                    
+                        
+                            <li><a href="https://portswigger.net/web-security/authentication/password-based#http-basic-authentication" target="_blank">PortSwigger: Basic Authentication</a></li>
+                        
+                    
+                        
+                            <li><a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Authentication" target="_blank">MDN Web Docs: HTTP authentication</a></li>
+                        
+                    
+                </ul>
+            </div>
+            
+
+        
+            <h2>Common Security Headers</h2>
+            
+                
+                    <p>This module checks for some common HTTP security headers used in REST APIs.</p>
+                
+                    <p><ul><li><strong>HTTP Strict Transport Security (HSTS)</strong> - ensures that browsers only communicate with a website over HTTPS, 
+            preventing protocol downgrade attacks and mitigating man-in-the-middle (MITM) attacks.</li></p>
+                
+                    <p><li><strong>X-Content-Type-Options</strong> - Prevents MIME-type sniffing by forcing the browser to respect the declared Content-Type header, 
+            mitigating certain types of cross-site scripting (XSS) and content injection attacks.</li></p>
+                
+                    <p><li><strong>Server</strong> - reveals details about the web server software (e.g., Apache/2.4.41), 
+            which attackers can use to fingerprint the system and target known vulnerabilities.</li></p>
+                
+                    <p><li><strong>X-Powered-By</strong> - Similar to the Server header, X-Powered-By exposes backend technology (e.g., X-Powered-By: 
+            PHP/7.4 or Express), making it easier for attackers to craft targeted exploits.</li></ul></p>
+                
+            
+
+            
+            <table>
+                <tr>
+                    
+                        <th>Endpoint</th>
+                    
+                        <th>Header</th>
+                    
+                        <th>Is Present?</th>
+                    
+                        <th>Header Value</th>
+                    
+                        <th>Test Result</th>
+                    
+                </tr>
+                
+                <tr>
+                    
+                        
+                            <td>/api/v1/login/access-token</td>
+                        
+                    
+                        
+                            <td>Strict-Transport-Security</td>
+                        
+                    
+                        
+                            <td>No</td>
+                        
+                    
+                        
+                            <td>N/A</td>
+                        
+                    
+                        
+                            <td class="fail">FAIL</td>
+                        
+                    
+                </tr>
+                
+                <tr>
+                    
+                        
+                            <td>/api/v1/login/access-token</td>
+                        
+                    
+                        
+                            <td>X-Content-Type-Options</td>
+                        
+                    
+                        
+                            <td>No</td>
+                        
+                    
+                        
+                            <td>N/A</td>
+                        
+                    
+                        
+                            <td class="fail">FAIL</td>
+                        
+                    
+                </tr>
+                
+                <tr>
+                    
+                        
+                            <td>/api/v1/login/access-token</td>
+                        
+                    
+                        
+                            <td>Server</td>
+                        
+                    
+                        
+                            <td>Yes</td>
+                        
+                    
+                        
+                            <td>uvicorn</td>
+                        
+                    
+                        
+                            <td class="fail">FAIL</td>
+                        
+                    
+                </tr>
+                
+                <tr>
+                    
+                        
+                            <td>/api/v1/login/access-token</td>
+                        
+                    
+                        
+                            <td>X-Powered-By</td>
+                        
+                    
+                        
+                            <td>No</td>
+                        
+                    
+                        
+                            <td>N/A</td>
+                        
+                    
+                        
+                            <td class="pass">PASS</td>
+                        
+                    
+                </tr>
+                
+            </table>
+            
+
+            
+            <div class="remediation-container">
+                <h3>Remediation</h3>
+                    
+                        <p>Ensure that security headers like 'Strict-Transport-Security' and 'X-Content-Type-Options' are present to enhance protection.</p>
+                    
+                        <p>Remove 'Server' and 'X-Powered-By' headers to prevent unnecessary exposure of technology stack information.</p>
+                    
+            </div>
+            
+
+            
+            <div class="verification-container">
+                <h3>Verification Commands</h3>
+                
+                    <pre><code class="language-bash">curl -k -I https://&lt;DOMAIN NAME/IP ADDRESS&gt;/api/v1/example | grep &#39;Strict-Transport-Security\|X-Content-Type-Options\|Server\|X-Powered-By&#39; -i</code></pre>
+                
+            </div>
+            
+        
+
+            
+            <div class="reference-container">
+                <h3>References</h3>
+                <ul>
+                    
+                        
+                            <li><a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers" target="_blank">Mozilla Security Headers Guide</a></li>
+                        
+                    
+                        
+                            <li><a href="https://www.invicti.com/blog/web-security/http-security-headers/" target="_blank">HTTP security headers: An easy way to harden your web applications</a></li>
+                        
+                    
+                </ul>
+            </div>
+            
+
+        
+            <h2>CORS Security</h2>
+            
+                
+                    <p>Cross-Origin Resource Sharing (CORS) is a security mechanism that controls how web applications from 
+            different origins interact with an API. A misconfigured CORS policy can allow unauthorized websites to access 
+            sensitive data on behalf of authenticated users.</p>
+                
+                    <p>This module sends requests using different <strong>Origin</strong> values to check if they are allowed. 
+            If you want to test a particular origin, use the <strong>--cors-custom-origin</strong> option.</p>
+                
+                    <p><ul><li>ACAO = Access-Control-Allow-Origin header</li></p>
+                
+                    <p><li>ACAC = Access-Control-Allow-Credentials header</li></ul></p>
+                
+            
+
+            
+            <table>
+                <tr>
+                    
+                        <th>Endpoint</th>
+                    
+                        <th>Tested Origin</th>
+                    
+                        <th>Response ACAO</th>
+                    
+                        <th>Response ACAC</th>
+                    
+                        <th>Test Result</th>
+                    
+                </tr>
+                
+                <tr>
+                    
+                        
+                            <td>/api/v1/login/test-token</td>
+                        
+                    
+                        
+                            <td>null</td>
+                        
+                    
+                        
+                            <td>Not Present</td>
+                        
+                    
+                        
+                            <td>true</td>
+                        
+                    
+                        
+                            <td>No obvious misconfiguration</td>
+                        
+                    
+                </tr>
+                
+                <tr>
+                    
+                        
+                            <td>/api/v1/login/test-token</td>
+                        
+                    
+                        
+                            <td>https://evil.com</td>
+                        
+                    
+                        
+                            <td>Not Present</td>
+                        
+                    
+                        
+                            <td>true</td>
+                        
+                    
+                        
+                            <td>No obvious misconfiguration</td>
+                        
+                    
+                </tr>
+                
+                <tr>
+                    
+                        
+                            <td>/api/v1/password-recovery-html-content/{email}</td>
+                        
+                    
+                        
+                            <td>null</td>
+                        
+                    
+                        
+                            <td>Not Present</td>
+                        
+                    
+                        
+                            <td>true</td>
+                        
+                    
+                        
+                            <td>No obvious misconfiguration</td>
+                        
+                    
+                </tr>
+                
+                <tr>
+                    
+                        
+                            <td>/api/v1/password-recovery-html-content/{email}</td>
+                        
+                    
+                        
+                            <td>https://evil.com</td>
+                        
+                    
+                        
+                            <td>Not Present</td>
+                        
+                    
+                        
+                            <td>true</td>
+                        
+                    
+                        
+                            <td>No obvious misconfiguration</td>
+                        
+                    
+                </tr>
+                
+                <tr>
+                    
+                        
+                            <td>/api/v1/users/{user_id}</td>
+                        
+                    
+                        
+                            <td>null</td>
+                        
+                    
+                        
+                            <td>Not Present</td>
+                        
+                    
+                        
+                            <td>true</td>
+                        
+                    
+                        
+                            <td>No obvious misconfiguration</td>
+                        
+                    
+                </tr>
+                
+                <tr>
+                    
+                        
+                            <td>/api/v1/users/{user_id}</td>
+                        
+                    
+                        
+                            <td>https://evil.com</td>
+                        
+                    
+                        
+                            <td>Not Present</td>
+                        
+                    
+                        
+                            <td>true</td>
+                        
+                    
+                        
+                            <td>No obvious misconfiguration</td>
+                        
+                    
+                </tr>
+                
+            </table>
+            
+
+            
+            <div class="remediation-container">
+                <h3>Remediation</h3>
+                    
+                        <p>Implement proper CORS headers: The server can add appropriate CORS headers to allow cross-origin requests from only trusted sites.</p>
+                    
+                        <p>Restrict access to sensitive data: It is important to restrict access to sensitive data to only trusted domains. This can be done by implementing access control measures such as authentication and authorization.</p>
+                    
+            </div>
+            
+
+            
+            <div class="verification-container">
+                <h3>Verification Commands</h3>
+                
+                    <pre><code class="language-bash">curl -k -I -H &#39;Origin: https://evil.com&#39; https://&lt;DOMAIN NAME/IP ADDRESS&gt;/api/v1/example</code></pre>
+                
+            </div>
+            
+        
+
+            
+            <div class="reference-container">
+                <h3>References</h3>
+                <ul>
+                    
+                        
+                            <li><a href="https://www.freecodecamp.org/news/exploiting-cors-guide-to-pentesting" target="_blank">Exploiting CORS - How to Pentest Cross-Origin Resource Sharing Vulnerabilities</a></li>
+                        
+                    
+                        
+                            <li><a href="https://www.tenable.com/blog/understanding-cross-origin-resource-sharing-vulnerabilities" target="_blank">Tenable: Understanding Cross-Origin Resource Sharing Vulnerabilities</a></li>
+                        
+                    
+                        
+                            <li><a href="https://portswigger.net/web-security/cors" target="_blank">PortSwigger: CORS</a></li>
+                        
+                    
+                </ul>
+            </div>
+            
+
+        
+            <h2>Rate Limiting</h2>
+            
+                
+                    <p>Tests whether a target REST API has any rate limiting measures.</p>
+                
+                    <p>A value of None for the columns <strong>Rate Limit Headers Present</strong> or <strong>Rate Limit Response Status Codes</strong> indicates that no such headers were returned by the API.</p>
+                
+                    <p>The number of requests - 100 - has been split into 3 batches. If you notice a significant increase (> 50%) in response time between batches, this is a good sign that the API has request throttling enabled.</p>
+                
+            
+
+            
+            <table>
+                <tr>
+                    
+                        <th>Endpoint</th>
+                    
+                        <th>Rate Limit Headers Present</th>
+                    
+                        <th>Rate Limit Response Status Codes</th>
+                    
+                        <th>Batch 1 Avg Response Time (ms)</th>
+                    
+                        <th>Batch 2 Avg Response Time (ms)</th>
+                    
+                        <th>Batch 3 Avg Response Time (ms)</th>
+                    
+                        <th>Heuristic Test Result</th>
+                    
+                </tr>
+                
+                <tr>
+                    
+                        
+                            <td>/api/v1/password-recovery/{email}</td>
+                        
+                    
+                        
+                            <td>None</td>
+                        
+                    
+                        
+                            <td>None</td>
+                        
+                    
+                        
+                            <td>1.8298</td>
+                        
+                    
+                        
+                            <td>1.6773</td>
+                        
+                    
+                        
+                            <td>1.6323</td>
+                        
+                    
+                        
+                            <td>No clear signs of rate limiting detected</td>
+                        
+                    
+                </tr>
+                
+                <tr>
+                    
+                        
+                            <td>/api/v1/login/access-token</td>
+                        
+                    
+                        
+                            <td>None</td>
+                        
+                    
+                        
+                            <td>None</td>
+                        
+                    
+                        
+                            <td>0.9687</td>
+                        
+                    
+                        
+                            <td>0.9365</td>
+                        
+                    
+                        
+                            <td>0.9813</td>
+                        
+                    
+                        
+                            <td>No clear signs of rate limiting detected</td>
+                        
+                    
+                </tr>
+                
+                <tr>
+                    
+                        
+                            <td>/api/v1/login/test-token</td>
+                        
+                    
+                        
+                            <td>None</td>
+                        
+                    
+                        
+                            <td>None</td>
+                        
+                    
+                        
+                            <td>0.7773</td>
+                        
+                    
+                        
+                            <td>0.7713</td>
+                        
+                    
+                        
+                            <td>0.8336</td>
+                        
+                    
+                        
+                            <td>No clear signs of rate limiting detected</td>
+                        
+                    
+                </tr>
+                
+            </table>
+            
+
+            
+            <div class="remediation-container">
+                <h3>Remediation</h3>
+                    
+                        <p>Rate limiting restricts the number of requests a single source can send within a specific time frame (e.g., 10 requests per second per IP). This helps prevent brute-force attacks by limiting repeated login attempts. By analyzing normal user behavior, the application can define appropriate thresholds for an effective rate limiting policy.</p>
+                    
+                        <p>Implementing account lockout policies further enhances security by temporarily disabling login access after a set number of consecutive failed attempts. This prevents attackers from continuously guessing or using leaked credentials.</p>
+                    
+                        <p>When combined with CAPTCHA challenges on login pages, which require solving visual puzzles to verify human interaction, rate limiting and account lockout mechanisms significantly slow down brute-force attacks. These defenses make large-scale attacks impractical while ensuring minimal disruption for legitimate users.</p>
+                    
+            </div>
+            
+
+            
+            <div class="verification-container">
+                <h3>Verification Commands</h3>
+                
+                    <pre><code class="language-bash">
+for i in {1..150}; do curl -k -o /dev/null -s -w &#34;Request $i: HTTP Status: %{http_code}, Time: %{time_total}s
+&#34; &#39;https://&lt;DOMAIN NAME/IP ADDRESS&gt;/api/v1/example&#39; --header &#39;&lt;ACCESS DETAILS&gt;&#39;; done</code></pre>
+                
+            </div>
+            
+        
+
+            
+            <div class="reference-container">
+                <h3>References</h3>
+                <ul>
+                    
+                        
+                            <li><a href="https://owasp.org/API-Security/editions/2023/en/0xa4-unrestricted-resource-consumption/" target="_blank">OWASP: API Security</a></li>
+                        
+                    
+                        
+                            <li><a href="https://owasp.org/www-community/controls/Blocking_Brute_Force_Attacks" target="_blank">OWASP: Blocking Brute Force Attacks</a></li>
+                        
+                    
+                </ul>
+            </div>
+            
+
+        
             <h2>HTTP Verb Tampering</h2>
             
                 
