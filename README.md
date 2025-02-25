@@ -127,9 +127,9 @@ options:
 ```
 
 ### Rate Limiting Check
-The rate limiting check sends a high volume of requests to API endpoints to determine if rate limits are enforced. If the API fails to implement proper rate limiting, attackers could abuse it for credential stuffing, scraping, or denial-of-service (DoS) attacks.
+The rate limiting check sends a high volume of requests to API endpoints to determine if rate limits are enforced. If the API fails to implement proper rate limiting, attackers could abuse it for credential stuffing, or denial-of-service (DoS) attacks.
 
-This module will send multiple requests per second to an endpoint and analyze the responses. If the API allows unlimited requests without blocking or returning `429 Too Many Requests`, the entry will be flagged. Users can configure the request rate and threshold.
+This module will send multiple requests per second to an endpoint and analyze the responses. If the API does not implement rate-limiting headers, allows unlimited requests without blocking or returning `429 Too Many Requests`, the entry will be flagged. Users can configure the request rate and threshold.
 
 ```
 $ python3 hAPI/cli.py rate_limiting -h 
@@ -149,7 +149,7 @@ options:
 
 ### CORS Check
 
-The CORS check analyzes the API's Cross-Origin Resource Sharing (CORS) policy to identify misconfigurations that could allow unauthorized cross-origin access. If an API permits `Access-Control-Allow-Origin: *` or incorrectly allows `Access-Control-Allow-Credentials: true`, an attacker could exploit this to steal user data.
+The CORS check analyzes the API's Cross-Origin Resource Sharing (CORS) policy to identify misconfigurations that could allow unauthorized cross-origin access. If an API permits arbitrary or null origins (`Access-Control-Allow-Origin: null`) or incorrectly allows `Access-Control-Allow-Credentials: true`, an attacker could exploit this to steal user data.
 
 The module sends cross-origin requests with different `Origin` headers to see how the API responds. It flags permissive or unsafe CORS configurations that could be exploited.
 
@@ -171,7 +171,7 @@ options:
 
 ### Common HTTP Security Headers Check
 
-The HTTP security headers check scans API responses to identify missing or misconfigured security headers. Proper security headers help mitigate attacks such as MIME-type sniffing, clickjacking, and cross-site scripting (XSS).
+The HTTP security headers check scans API responses to identify missing or misconfigured security headers. Proper security headers help mitigate attacks such as MIME-type sniffing, encryption downgrade, and information disclosure vulnerabilities.
 
 This module checks for headers like `Strict-Transport-Security`, `X-Content-Type-Options`, `Server` and `X-Powered-By`. If critical security headers are missing or improperly configured, they will be flagged.
 
@@ -193,7 +193,7 @@ options:
 
 The HTTP Basic Auth check scans API endpoints for the use of Basic Authentication, which transmits credentials in a Base64-encoded format without encryption. This authentication method is outdated and exposes users to credential interception and replay attacks.
 
-The module sends requests to detect `Authorization: Basic` headers in responses. If found, the endpoint will be flagged, and recommendations for secure alternatives will be provided.
+If HTTP basic authentication is found, the endpoint will be flagged, and recommendations for secure alternatives will be provided.
 
 ```
 $ python3 hAPI/cli.py basic_auth -h
