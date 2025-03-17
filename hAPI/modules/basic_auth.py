@@ -57,7 +57,9 @@ class BasicAuth:
                     )
 
             # Determine test result
-            if no_auth_status != test_auth_status:
+            if www_auth_header != "Not Present":
+                test_result = "Supports Basic Auth"
+            elif no_auth_status != test_auth_status:
                 test_result = "Supports Basic Auth"
             else:
                 test_result = "No Basic Auth Detected"
