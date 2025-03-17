@@ -57,7 +57,9 @@ class BasicAuth:
                     )
 
             # Determine test result
-            if www_auth_header != "Not Present":
+            if no_auth_status == 405 or test_auth_status == 405 or real_auth_status == 405:
+                test_result = "Unsupported HTTP method - no results."
+            elif www_auth_header != "Not Present":
                 test_result = "Supports Basic Auth"
             elif no_auth_status != test_auth_status:
                 test_result = "Supports Basic Auth"
