@@ -37,6 +37,25 @@ pip install -r requirements.txt
 
 ## Usage
 
+### Preparing the OpenAPI schema
+
+OpenAPI schemas always contain variables. For example, an endpoint might look like this: `/api/v1/items/{id}` (`id` is a variable). hAPI currently does not perform any type of processing on these variables and as a result, it sends the request to the path as-is (including curly brackets and all). This may break some requests and thus interfere with the results of the tool. For this reason, it is recommended to prepare your OpenAPI schema by replacing these with a value using this command.
+
+1. Create a copy of your OpenAPI schema.
+
+```bash
+cp swagger.json swagger_hapi.json
+```
+
+2. Replace string `{id}` with the value `1` in the copy. 
+
+```bash
+sed -i 's/{id}/1/g' swagger_hapi.json
+```
+
+As a result, hAPI will use `/api/v1/items/1` as an endpoint instead of `/api/v1/items/{id}`.
+
+### Running the tool
 Enter project folder.
 ```bash
 cd hAPI
